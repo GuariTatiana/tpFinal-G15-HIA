@@ -1,0 +1,266 @@
+<section class="admin-page">
+    <div class="container py-4 py-lg-5">
+        <header class="admin-header mb-4">
+            <div>
+                <span class="section-badge">
+                    <i class="bi bi-shield-check"></i>
+                    Panel admin
+                </span>
+
+                <h1>Solicitudes de dueños</h1>
+
+                <p>
+                    Revisá las solicitudes enviadas por jugadores que quieren registrar
+                    complejos deportivos.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-outline-success refresh-btn" (click)="cargarSolicitudes()"
+                [disabled]="isLoading()">
+                @if (isLoading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                } @else {
+                <i class="bi bi-arrow-clockwise me-2"></i>
+                }
+                Actualizar
+            </button>
+        </header>
+
+        <div class="stats-grid mb-4">
+            <article class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <span>Pendientes</span>
+                    <strong>{{ totalPendientes() }}</strong>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <span>Aprobadas</span>
+                    <strong>{{ totalAprobadas() }}</strong>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon danger">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div>
+                    <span>Rechazadas</span>
+                    <strong>{{ totalRechazadas() }}</strong>
+                </div>
+            </article>
+        </div>
+
+        @if (successMessage()) {
+        <div class="alert alert-success border-0 shadow-sm">
+            <i class="bi bi-check-circle me-2"></i>
+            {{ successMessage() }}
+        </div>
+        }
+
+        @if (errorMessage()) {
+        <div class="alert alert-danger border-0 shadow-sm">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ errorMessage() }}
+        </div>
+        }
+
+        <div class="admin-card">
+            <div class="card-toolbar">
+                <div>
+                    <h2>Listado de solicitudes</h2>
+                    <p>Filtrá por estado y gestioná cada solicitud pendiente.</p>
+                </div>
+
+                <div class="filter-buttons">
+                    <button type="button" class="filter-btn" [class.active]="filtroEstado() === 'todas'"
+                        (click)="cambiarFiltro('todas')">
+                        Todas
+                    </button>
+
+                    <button type="button" class="filter-btn" [class.active]="filtroEstado() === 'pendiente'"
+                        (click)="cambiarFiltro('pendiente')">
+                        Pendientes
+                    </button>
+
+                    <button type="button" class="filter-btn" [class.active]="filtroEstado() === 'aprobada'"
+                        (click)="cambiarFiltro('aprobada')">
+                        Aprobadas
+                    </button>
+
+                    <button type="button" class="filter-btn" [class.active]="filtroEstado() === 'rechazada'"
+                        (click)="cambiarFiltro('rechazada')">
+                        Rechazadas
+                    </button>
+                </div>
+            </div>
+
+            @if (isLoading()) {
+            <div class="loading-state">
+                <span class="spinner-border text-success"></span>
+                <p>Cargando solicitudes...</p>
+            </div>
+            } @else if (solicitudesFiltradas().length === 0) {
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h3>No hay solicitudes</h3>
+                <p>No se encontraron solicitudes para el filtro seleccionado.</p>
+            </div>
+            } @else {
+            <div class="table-responsive">
+                <table class="table align-middle admin-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Complejo</th>
+                            <th>Ubicación</th>
+                            <th>Contacto</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (solicitud of solicitudesFiltradas(); track solicitud.id) {
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar">
+                                        {{ solicitud.usuario?.nombre?.charAt(0) || "U" }}
+                                    </div>
+
+                                    <div>
+                                        <strong>
+                                            {{ solicitud.usuario?.nombre || "Usuario" }}
+                                            {{ solicitud.usuario?.apellido || "" }}
+                                        </strong>
+                                        <span>{{ solicitud.usuario?.email || "Sin email" }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <strong>{{ solicitud.nombre_complejo }}</strong>
+
+                                @if (solicitud.mensaje) {
+                                <small class="d-block text-muted">
+                                    "{{ solicitud.mensaje }}"
+                                </small>
+                                }
+                            </td>
+
+                            <td>
+                                <span>{{ solicitud.direccion_complejo }}</span>
+                                <small class="d-block text-muted">
+                                    {{ solicitud.provincia }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <i class="bi bi-telephone me-1"></i>
+                                {{ solicitud.telefono_contacto }}
+                            </td>
+
+                            <td>
+                                <span class="badge rounded-pill" [class]="getEstadoClass(solicitud.estado)">
+                                    {{ solicitud.estado }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ formatearFecha(solicitud.createdAt) }}
+                            </td>
+
+                            <td class="text-end">
+                                @if (solicitud.estado === "pendiente") {
+                                <div class="actions">
+                                    <button type="button" class="btn btn-sm btn-success"
+                                        (click)="aprobarSolicitud(solicitud)"
+                                        [disabled]="accionLoadingId() === solicitud.id">
+                                        @if (accionLoadingId() === solicitud.id) {
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                        } @else {
+                                        <i class="bi bi-check-lg"></i>
+                                        }
+                                        Aprobar
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        (click)="abrirModalRechazo(solicitud)"
+                                        [disabled]="accionLoadingId() === solicitud.id">
+                                        <i class="bi bi-x-lg"></i>
+                                        Rechazar
+                                    </button>
+                                </div>
+                                } @else {
+                                <span class="text-muted small">
+                                    Procesada
+                                </span>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+    </div>
+
+    @if (solicitudSeleccionada()) {
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <div class="modal-header-custom">
+                <div>
+                    <h3>Rechazar solicitud</h3>
+                    <p>
+                        {{ solicitudSeleccionada()?.nombre_complejo }}
+                    </p>
+                </div>
+
+                <button type="button" class="close-btn" (click)="cerrarModalRechazo()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-custom">
+                <label for="respuestaAdmin" class="form-label">
+                    Motivo del rechazo
+                </label>
+
+                <textarea id="respuestaAdmin" class="form-control" rows="4"
+                    placeholder="Ej: Faltan datos para validar el complejo." [ngModel]="respuestaAdmin()"
+                    (ngModelChange)="respuestaAdmin.set($event)"></textarea>
+
+                <small class="text-muted">
+                    Este mensaje quedará guardado en la solicitud.
+                </small>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-light" (click)="cerrarModalRechazo()">
+                    Cancelar
+                </button>
+
+                <button type="button" class="btn btn-danger" (click)="confirmarRechazo()"
+                    [disabled]="accionLoadingId() === solicitudSeleccionada()?.id">
+                    @if (accionLoadingId() === solicitudSeleccionada()?.id) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    } @else {
+                    <i class="bi bi-x-circle me-2"></i>
+                    }
+                    Rechazar solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+</section>

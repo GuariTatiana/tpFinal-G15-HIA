@@ -1,0 +1,176 @@
+<section class="admin-panel-page">
+    <div class="container py-4 py-lg-5">
+        <header class="admin-header mb-4">
+            <div>
+                <span class="section-badge">
+                    <i class="bi bi-shield-lock"></i>
+                    Panel administrador
+                </span>
+
+                <h1>Resumen general</h1>
+
+                <p>
+                    Vista rápida del estado de la plataforma, usuarios, reservas,
+                    complejos y solicitudes pendientes.
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <a routerLink="/inicio" class="btn btn-light">
+                    <i class="bi bi-house me-2"></i>
+                    Inicio
+                </a>
+
+                <a routerLink="/admin/solicitudes-duenio" class="btn btn-success">
+                    <i class="bi bi-person-check me-2"></i>
+                    Ver solicitudes
+                </a>
+            </div>
+        </header>
+
+        <div class="stats-grid mb-4">
+            <article class="stat-card">
+                <div class="stat-icon users">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div>
+                    <span>Usuarios registrados</span>
+                    <strong>{{ totalUsuarios() }}</strong>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon complexes">
+                    <i class="bi bi-building"></i>
+                </div>
+
+                <div>
+                    <span>Complejos cargados</span>
+                    <strong>{{ totalComplejos() }}</strong>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon bookings">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+
+                <div>
+                    <span>Reservas totales</span>
+                    <strong>{{ totalReservas() }}</strong>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon money">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+
+                <div>
+                    <span>Ingresos del mes</span>
+                    <strong>{{ formatearMoneda(ingresosMes()) }}</strong>
+                </div>
+            </article>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="admin-card requests-card">
+                <div class="card-header-custom">
+                    <div>
+                        <h2>Solicitudes de dueños</h2>
+                        <p>Últimas peticiones enviadas por jugadores.</p>
+                    </div>
+
+                    <span class="pending-pill">
+                        {{ totalSolicitudesPendientes() }} pendientes
+                    </span>
+                </div>
+
+                <div class="requests-list">
+                    @for (solicitud of solicitudesVisibles(); track solicitud.id) {
+                    <div class="request-item">
+                        <div class="request-user">
+                            <div class="avatar">
+                                {{ solicitud.usuario.charAt(0) }}
+                            </div>
+
+                            <div>
+                                <strong>{{ solicitud.usuario }}</strong>
+                                <span>{{ solicitud.email }}</span>
+                            </div>
+                        </div>
+
+                        <div class="request-info">
+                            <strong>{{ solicitud.complejo }}</strong>
+                            <span>
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ solicitud.provincia }}
+                            </span>
+                        </div>
+
+                        <div class="request-meta">
+                            <span class="badge rounded-pill" [class]="getEstadoClass(solicitud.estado)">
+                                {{ solicitud.estado }}
+                            </span>
+
+                            <small>{{ formatearFecha(solicitud.fecha) }}</small>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <div class="card-footer-custom">
+                    <a routerLink="/admin/solicitudes-duenio" class="btn btn-success">
+                        Ver más
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </article>
+
+            <article class="admin-card quick-actions-card">
+                <div class="card-header-custom">
+                    <div>
+                        <h2>Acciones rápidas</h2>
+                        <p>Accesos principales del administrador.</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <a routerLink="/admin/solicitudes-duenio" class="quick-action">
+                        <div class="quick-icon">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+
+                        <div>
+                            <strong>Solicitudes de dueños</strong>
+                            <span>Aprobar o rechazar nuevos dueños.</span>
+                        </div>
+                    </a>
+
+                    <a routerLink="/admin/complejos" class="quick-action">
+                        <div class="quick-icon">
+                            <i class="bi bi-building-check"></i>
+                        </div>
+
+                        <div>
+                            <strong>Complejos</strong>
+                            <span>Gestionar complejos registrados.</span>
+                        </div>
+                    </a>
+
+                    <a routerLink="/admin/usuarios" class="quick-action">
+                        <div class="quick-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+
+                        <div>
+                            <strong>Usuarios</strong>
+                            <span>Administrar cuentas y roles.</span>
+                        </div>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>

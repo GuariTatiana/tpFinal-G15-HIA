@@ -1,0 +1,364 @@
+<div class="perfil-page">
+    <div class="container px-3 px-lg-4 py-4">
+
+        <div class="perfil-header mb-4">
+            <div>
+                <h1>Mi perfil</h1>
+                <p>Información personal y reservas realizadas</p>
+            </div>
+
+            <button type="button" class="btn btn-success" (click)="abrirModalFoto()">
+                <i class="bi bi-camera-fill me-2"></i>
+                Editar foto
+            </button>
+        </div>
+
+        <div class="perfil-card">
+
+            <div class="perfil-banner"></div>
+
+            <div class="perfil-content">
+
+                <div class="row g-4 align-items-start">
+
+                    <div class="col-12 col-lg-4">
+                        <div class="profile-summary-card text-center">
+
+                            <div class="avatar-wrapper mx-auto">
+                                <div class="avatar">
+                                    @if (usuario()?.foto_perfil) {
+                                    <img [src]="usuario()?.foto_perfil" alt="Foto de perfil">
+                                    } @else {
+                                    <i class="bi bi-person-fill"></i>
+                                    }
+                                </div>
+
+                                <button type="button" class="btn btn-light btn-edit-avatar shadow-sm"
+                                    (click)="abrirModalFoto()">
+                                    <i class="bi bi-camera-fill"></i>
+                                </button>
+                            </div>
+
+                            <h4 class="profile-name">
+                                {{ usuario()?.nombre }} {{ usuario()?.apellido }}
+                            </h4>
+
+                            @switch (usuario()?.rol) {
+                            @case ('duenio') {
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                <i class="bi bi-building me-1"></i>
+                                Dueño
+                            </span>
+                            }
+                            @case ('jugador') {
+                            <span class="badge rounded-pill text-bg-primary px-3 py-2">
+                                <i class="bi bi-person me-1"></i>
+                                Jugador
+                            </span>
+                            }
+                            @case ('admin') {
+                            <span class="badge rounded-pill text-bg-dark px-3 py-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Admin
+                            </span>
+                            }
+                            }
+
+                            <button type="button" class="btn btn-outline-success w-100 mt-4" (click)="abrirModalFoto()">
+                                <i class="bi bi-pencil-square me-2"></i>
+                                Editar foto de perfil
+                            </button>
+
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-8">
+
+                        <div class="dashboard-card h-100">
+
+                            <div class="card-header-custom">
+                                <div>
+                                    <h5>
+                                        <i class="bi bi-person-vcard me-2 text-success"></i>
+                                        Información personal
+                                    </h5>
+                                    <p>Datos principales de tu cuenta</p>
+                                </div>
+                            </div>
+
+                            <div class="info-grid">
+
+                                <div class="info-item">
+                                    <div class="info-icon bg-success-subtle text-success">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+
+                                    <div>
+                                        <span class="info-label">Nombre</span>
+                                        <strong>{{ usuario()?.nombre || '-' }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="info-item">
+                                    <div class="info-icon bg-primary-subtle text-primary">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+
+                                    <div>
+                                        <span class="info-label">Apellido</span>
+                                        <strong>{{ usuario()?.apellido || '-' }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="info-item info-item-full">
+                                    <div class="info-icon bg-info-subtle text-info">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <span class="info-label">Correo electrónico</span>
+                                        <strong>{{ usuario()?.email || '-' }}</strong>
+                                    </div>
+
+                                    <div class="email-status">
+                                        @if(usuario()?.emailVerificado) {
+                                        <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Verificado
+                                        </span>
+                                        } @else {
+                                        <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            No verificado
+                                        </span>
+                                        }
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dashboard-card mt-4">
+
+            <div class="card-header-custom">
+                <div>
+                    <h5>
+                        <i class="bi bi-calendar-check me-2 text-success"></i>
+                        Historial de reservas
+                    </h5>
+                    <p>Reservas realizadas por el usuario</p>
+                </div>
+
+                @if (reservas().length > 3) {
+                <button type="button" class="btn btn-outline-success btn-sm" (click)="toggleReservas()">
+                    @if (mostrarTodasReservas()) {
+                    <i class="bi bi-chevron-up me-1"></i>
+                    Ver menos
+                    } @else {
+                    <i class="bi bi-chevron-down me-1"></i>
+                    Ver todas
+                    }
+                </button>
+                }
+            </div>
+
+            <div class="historial">
+
+                @if (cargandoReservas()) {
+                <div class="empty-state">
+                    <div class="spinner-border text-success mb-3" role="status"></div>
+                    <p>Cargando reservas...</p>
+                </div>
+                } @else if (reservas().length === 0) {
+                <div class="empty-state">
+                    <i class="bi bi-calendar-x"></i>
+                    <h6>No tenés reservas todavía</h6>
+                    <p>Cuando realices una reserva, aparecerá en esta sección.</p>
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Cancha</th>
+                                <th>Fecha</th>
+                                <th>Horario</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @for (r of reservasVisibles(); track r.id) {
+                            <tr>
+                                <td>
+                                    <div class="reserva-cancha">
+                                        <div class="reserva-icon">
+                                            <i class="bi bi-dribbble"></i>
+                                        </div>
+
+                                        <div>
+                                            <strong>{{ r.cancha?.nombre ?? '-' }}</strong>
+                                            <span>{{ r.cancha?.tipo ?? 'Cancha' }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="fw-semibold">
+                                    {{ r.fecha }}
+                                </td>
+
+                                <td>
+                                    {{ r.hora_inicio }} - {{ r.hora_fin }}
+                                </td>
+
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-2 text-capitalize"
+                                        [class]="getBadgeClass(r.estado)">
+                                        {{ r.estado || 'desconocido' }}
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    @if (r.estado === 'pendiente') {
+                                    <button type="button" class="btn btn-success btn-sm" (click)="pagarReserva(r)"
+                                        [disabled]="reservaPagandoId() === r.id">
+                                        @if (reservaPagandoId() === r.id) {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                        Redirigiendo...
+                                        } @else {
+                                        <i class="bi bi-credit-card me-1"></i>
+                                        Pagar
+                                        }
+                                    </button>
+                                    } @else if (r.estado === 'confirmada') {
+                                    <span class="text-success fw-semibold">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Pagada
+                                    </span>
+                                    } @else if (r.estado === 'cancelada') {
+                                    <span class="text-danger fw-semibold">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Cancelada
+                                    </span>
+                                    } @else {
+                                    <span class="text-muted">
+                                        {{ r.estado }}
+                                    </span>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!mostrarTodasReservas() && reservas().length > 3) {
+                <div class="table-footer">
+                    <span>
+                        Mostrando 3 de {{ reservas().length }} reservas
+                    </span>
+
+                    <button type="button" class="btn btn-link text-success fw-bold text-decoration-none"
+                        (click)="toggleReservas()">
+                        Ver historial completo
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+                }
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@if (modalFotoAbierto()) {
+<div class="modal-backdrop-custom"></div>
+
+<div class="modal-custom">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-camera-fill me-2 text-success"></i>
+                        Editar foto de perfil
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Seleccioná una imagen para actualizar tu perfil.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" (click)="cerrarModalFoto()"></button>
+            </div>
+
+            <div class="modal-body">
+
+                @if (errorFoto()) {
+                <div class="alert alert-danger rounded-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ errorFoto() }}
+                </div>
+                }
+
+                <div class="text-center my-4">
+
+                    <div class="modal-avatar-preview mx-auto">
+                        @if (previewFoto()) {
+                        <img [src]="previewFoto()" alt="Preview foto perfil">
+                        } @else {
+                        <i class="bi bi-person-fill"></i>
+                        }
+                    </div>
+
+                    <label for="fotoPerfilInput" class="btn btn-outline-success mt-4">
+                        <i class="bi bi-image me-2"></i>
+                        Seleccionar imagen
+                    </label>
+
+                    <input id="fotoPerfilInput" type="file" class="d-none" accept="image/png,image/jpeg,image/webp"
+                        (change)="onFotoSelected($event)">
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Formatos permitidos: PNG, JPG o WebP. Tamaño máximo: 2 MB.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light me-2" (click)="cerrarModalFoto()"
+                    [disabled]="guardandoFoto()">
+                    Cancelar
+                </button>
+
+                <button type="button" class="btn btn-success" (click)="guardarFotoPerfil()"
+                    [disabled]="guardandoFoto() || !fotoSeleccionada()">
+                    @if (guardandoFoto()) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Guardando...
+                    } @else {
+                    <i class="bi bi-save me-2"></i>
+                    Guardar foto
+                    }
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+}

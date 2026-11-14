@@ -1,0 +1,294 @@
+<div class="register-page">
+    <div class="container-fluid min-vh-100">
+        <div class="row min-vh-100">
+
+            <div class="col-12 col-xl-5 register-brand-panel d-none d-xl-flex">
+                <div class="brand-content">
+
+                    <span class="brand-badge">
+                        <span class="material-symbols-outlined me-2">
+                            sports_and_outdoors
+                        </span>
+                        Reserva Canchas
+                    </span>
+
+                    <h1>
+                        Creá tu cuenta y empezá a reservar o administrar canchas
+                    </h1>
+
+                    <p>
+                        Registrate como jugador para reservar turnos online, o como dueño para
+                        publicar tu complejo, administrar canchas y controlar reservas.
+                    </p>
+
+                    <div class="brand-card">
+                        <div class="brand-card-icon">
+                            <i class="bi bi-calendar2-check"></i>
+                        </div>
+
+                        <div>
+                            <strong>Gestión rápida</strong>
+                            <span>Turnos, pagos y complejos desde una sola plataforma.</span>
+                        </div>
+                    </div>
+
+                    <div class="brand-steps">
+                        <div>
+                            <strong>1</strong>
+                            <span>Creá tu cuenta</span>
+                        </div>
+
+                        <div>
+                            <strong>2</strong>
+                            <span>Elegí tu perfil</span>
+                        </div>
+
+                        <div>
+                            <strong>3</strong>
+                            <span>Reservá o administrá</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-7 register-form-panel">
+                <div class="register-card">
+
+                    <div class="register-header">
+                        <div>
+                            <span class="form-badge">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Nueva cuenta
+                            </span>
+
+                            <h2>Crear cuenta</h2>
+
+                            <p>
+                                Completá tus datos para acceder a la plataforma.
+                            </p>
+                        </div>
+
+                        <div class="header-ball d-none d-md-flex">
+                            <span class="material-symbols-outlined">
+                                sports_and_outdoors
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (errorMessage()) {
+                    <div class="alert alert-danger d-flex align-items-center gap-2 rounded-4 py-3 mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>{{ errorMessage() }}</span>
+                    </div>
+                    }
+
+                    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+
+                        <div class="row g-3">
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="nombre" class="form-label">Nombre</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-person"></i>
+
+                                        <input type="text" id="nombre" class="form-control" placeholder="Juan"
+                                            formControlName="nombre"
+                                            [class.is-invalid]="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid">
+                                    </div>
+
+                                    @if (registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid) {
+                                    <div class="invalid-message">
+                                        El nombre es requerido.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="apellido" class="form-label">Apellido</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-person-badge"></i>
+
+                                        <input type="text" id="apellido" class="form-control" placeholder="Pérez"
+                                            formControlName="apellido"
+                                            [class.is-invalid]="registerForm.get('apellido')?.touched && registerForm.get('apellido')?.invalid">
+                                    </div>
+
+                                    @if (registerForm.get('apellido')?.touched && registerForm.get('apellido')?.invalid)
+                                    {
+                                    <div class="invalid-message">
+                                        El apellido es requerido.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group-custom">
+                                    <label for="email" class="form-label">Correo electrónico</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-envelope"></i>
+
+                                        <input type="email" id="email" class="form-control"
+                                            placeholder="nombre@ejemplo.com" formControlName="email"
+                                            [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+                                    </div>
+
+                                    @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+                                    <div class="invalid-message">
+                                        @if (registerForm.get('email')?.errors?.['required']) {
+                                        <span>El correo es obligatorio.</span>
+                                        }
+                                        @if (registerForm.get('email')?.errors?.['email']) {
+                                        <span>El formato de correo no es válido.</span>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="password" class="form-label">Contraseña</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-lock"></i>
+
+                                        <div class="input-icon-wrapper password-wrapper">
+                                            <i class="bi bi-lock"></i>
+
+                                            <input [type]="mostrarPassword() ? 'text' : 'password'" id="password"
+                                                class="form-control" placeholder="Mínimo 6 caracteres"
+                                                formControlName="password"
+                                                [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+
+                                            <button type="button" class="password-toggle" (click)="togglePassword()"
+                                                [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                                                @if (mostrarPassword()) {
+                                                <i class="bi bi-eye-slash"></i>
+                                                } @else {
+                                                <i class="bi bi-eye"></i>
+                                                }
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid)
+                                    {
+                                    <div class="invalid-message">
+                                        La contraseña debe tener al menos 6 caracteres.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="rol" class="form-label">Tipo de perfil</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-person-gear"></i>
+
+                                        <select id="rol" class="form-select" formControlName="rol"
+                                            [class.is-invalid]="registerForm.get('rol')?.touched && registerForm.get('rol')?.invalid">
+                                            <option value="" disabled>Seleccioná tu perfil...</option>
+
+                                            @for (rol of rolesDisponibles; track rol.value) {
+                                            <option [value]="rol.value">
+                                                {{ rol.label }}
+                                            </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    @if (registerForm.get('rol')?.touched && registerForm.get('rol')?.invalid) {
+                                    <div class="invalid-message">
+                                        Debés elegir un perfil para continuar.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="role-info-box">
+                                    <div>
+                                        <i class="bi bi-person-check"></i>
+                                        <strong>Jugador</strong>
+                                        <span>Reservá canchas, consultá horarios y pagá tus turnos.</span>
+                                    </div>
+
+                                    <div>
+                                        <i class="bi bi-building-check"></i>
+                                        <strong>Dueño</strong>
+                                        <span>Se requiere llenar un formulario para evaluación</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="upload-card">
+                                    <div class="upload-preview">
+                                        @if (previewImage()) {
+                                        <img [src]="previewImage()" alt="Foto de perfil">
+                                        } @else {
+                                        <i class="bi bi-person-circle"></i>
+                                        }
+                                    </div>
+
+                                    <div class="upload-content">
+                                        <label for="fotoPerfil" class="form-label">
+                                            Foto de perfil
+                                        </label>
+
+                                        <p>
+                                            Subí una imagen para personalizar tu cuenta. Formatos permitidos:
+                                            PNG, JPG o WebP.
+                                        </p>
+
+                                        <label for="fotoPerfil" class="btn btn-outline-success">
+                                            <i class="bi bi-image me-2"></i>
+                                            Seleccionar imagen
+                                        </label>
+
+                                        <input type="file" id="fotoPerfil" class="d-none"
+                                            accept="image/png,image/jpeg,image/webp" (change)="onFileSelected($event)">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 register-submit mt-4"
+                            [disabled]="isLoading()">
+                            @if (isLoading()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Procesando...</span>
+                            } @else {
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Crear cuenta</span>
+                            }
+                        </button>
+
+                        <div class="login-link-box">
+                            <p>
+                                ¿Ya tenés una cuenta?
+                                <button type="button" (click)="irAlLogin()" class="btn btn-link">
+                                    Iniciá sesión
+                                </button>
+                            </p>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

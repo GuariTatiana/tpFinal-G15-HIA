@@ -1,0 +1,193 @@
+<section class="agregar-complejo-page">
+    <div class="container py-4 py-lg-5">
+        <div class="form-card mx-auto">
+            <div class="form-header">
+                <div>
+                    <span class="section-badge">
+                        <i class="bi bi-building-add"></i>
+                        Nuevo complejo
+                    </span>
+
+                    <h2>Agregar complejo</h2>
+
+                    <p>
+                        Cargá los datos principales del complejo deportivo. Luego un
+                        administrador podrá revisar la información.
+                    </p>
+                </div>
+
+                <button type="button" class="btn btn-outline-success back-btn" (click)="cancelar()">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Volver
+                </button>
+            </div>
+
+            @if (errorMessage()) {
+            <div class="alert alert-danger border-0 shadow-sm mt-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <form [formGroup]="complejoForm" (ngSubmit)="guardarComplejo()" class="complex-form mt-4">
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+
+                        <div>
+                            <h3>Información general</h3>
+                            <p>Datos visibles para los jugadores.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Nombre del complejo</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-building"></i>
+                                <input type="text" class="form-control" formControlName="nombre"
+                                    placeholder="Ej: Complejo Centro"
+                                    [class.is-invalid]="complejoForm.get('nombre')?.touched && complejoForm.get('nombre')?.invalid" />
+                            </div>
+
+                            @if (complejoForm.get('nombre')?.touched && complejoForm.get('nombre')?.invalid) {
+                            <small class="text-danger">El nombre del complejo es obligatorio.</small>
+                            }
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Dirección</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-geo-alt"></i>
+                                <input type="text" class="form-control" formControlName="direccion"
+                                    placeholder="Ej: Av. San Martín 123"
+                                    [class.is-invalid]="complejoForm.get('direccion')?.touched && complejoForm.get('direccion')?.invalid" />
+                            </div>
+
+                            @if (complejoForm.get('direccion')?.touched && complejoForm.get('direccion')?.invalid) {
+                            <small class="text-danger">La dirección es obligatoria.</small>
+                            }
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Provincia</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-map"></i>
+                                <input type="text" class="form-control" formControlName="provincia"
+                                    placeholder="Ej: Tucumán"
+                                    [class.is-invalid]="complejoForm.get('provincia')?.touched && complejoForm.get('provincia')?.invalid" />
+                            </div>
+
+                            @if (complejoForm.get('provincia')?.touched && complejoForm.get('provincia')?.invalid) {
+                            <small class="text-danger">La provincia es obligatoria.</small>
+                            }
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Teléfono</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-telephone"></i>
+                                <input type="text" class="form-control" formControlName="telefono"
+                                    placeholder="Ej: 3815551234"
+                                    [class.is-invalid]="complejoForm.get('telefono')?.touched && complejoForm.get('telefono')?.invalid" />
+                            </div>
+
+                            @if (complejoForm.get('telefono')?.touched && complejoForm.get('telefono')?.invalid) {
+                            <small class="text-danger">El teléfono es obligatorio.</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+
+                        <div>
+                            <h3>Horarios de atención</h3>
+                            <p>Definí el rango horario disponible del complejo.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Hora de apertura</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-sunrise"></i>
+                                <input type="time" class="form-control" formControlName="hora_apertura"
+                                    [class.is-invalid]="complejoForm.get('hora_apertura')?.touched && complejoForm.get('hora_apertura')?.invalid" />
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Hora de cierre</label>
+
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-moon-stars"></i>
+                                <input type="time" class="form-control" formControlName="hora_cierre"
+                                    [class.is-invalid]="complejoForm.get('hora_cierre')?.touched && complejoForm.get('hora_cierre')?.invalid" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">
+                            <i class="bi bi-pin-map"></i>
+                        </div>
+
+                        <div>
+                            <h3>Ubicación en el mapa</h3>
+                            <p>Opcional. Marcá la ubicación exacta para que los jugadores puedan encontrar el complejo.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="map-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Hacé clic en el mapa para guardar las coordenadas.</span>
+                    </div>
+
+                    <div id="mapa-complejo" class="mapa-container"></div>
+
+                    @if (complejoForm.get('latitud')?.value && complejoForm.get('longitud')?.value) {
+                    <div class="coordinates-box">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>
+                            Coordenadas guardadas:
+                            {{ complejoForm.get('latitud')?.value | number:'1.4-4' }},
+                            {{ complejoForm.get('longitud')?.value | number:'1.4-4' }}
+                        </span>
+                    </div>
+                    }
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-light cancel-btn" (click)="cancelar()">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-success submit-btn" [disabled]="isLoading()">
+                        @if (isLoading()) {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Guardando...
+                        } @else {
+                        <i class="bi bi-save me-2"></i>
+                        Guardar complejo
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,186 @@
+<div class="home-page">
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+
+                <div class="col-12 col-lg-7">
+                    <div class="hero-content">
+                        <span class="hero-badge">
+                            <span class="material-symbols-outlined me-2">
+                                sports_and_outdoors
+                            </span>
+                            Reservá tu cancha online
+                        </span>
+
+                        <h1>
+                            Encontrá y reservá canchas de fútbol en minutos
+                        </h1>
+
+                        <p>
+                            Buscá canchas disponibles, compará precios y reservá tu turno de manera simple,
+                            rápida y segura desde una sola plataforma.
+                        </p>
+
+                        <div class="hero-actions">
+                            <a href="#canchas" class="btn btn-success btn-lg">
+                                <i class="bi bi-search me-2"></i>
+                                Ver canchas
+                            </a>
+                            @if(authService.currentUser()?.rol === 'jugador'){
+                            <button type="button" routerLink="/solicitar-duenio" class="btn btn-outline-success btn-lg">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Ser dueño
+                            </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-5">
+                    <div class="hero-card">
+                        <div class="hero-card-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+
+                        <h5>Reservas simples</h5>
+                        <p>Elegí cancha, fecha y horario. Confirmá tu reserva y preparate para jugar.</p>
+
+                        <div class="hero-mini-stats">
+                            <div>
+                                <strong>24/7</strong>
+                                <span>Disponible</span>
+                            </div>
+
+                            <div>
+                                <strong>Online</strong>
+                                <span>Gestión rápida</span>
+                            </div>
+
+                            <div>
+                                <strong>Fácil</strong>
+                                <span>Sin llamadas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="canchas" class="canchas-section">
+        <div class="container">
+
+            <div class="section-header">
+                <div>
+                    <h2>Nuestras canchas disponibles</h2>
+                    <p>Filtrá por nombre o tipo de cancha para encontrar el turno ideal.</p>
+                </div>
+            </div>
+
+            <div class="filters-card">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6">
+                        <div class="filter-control">
+                            <i class="bi bi-search"></i>
+                            <input type="text" class="form-control" placeholder="Buscar por nombre..."
+                                (input)="nombreFiltro.set($any($event.target).value)">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="filter-control">
+                            <i class="bi bi-funnel"></i>
+                            <select class="form-select" (change)="tipoFiltro.set($any($event.target).value)">
+                                <option value="">Todos los tipos</option>
+                                <option value="Fútbol 5">Fútbol 5</option>
+                                <option value="Fútbol 7">Fútbol 7</option>
+                                <option value="Fútbol 11">Fútbol 11</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+
+                @for (cancha of canfchasFiltradas(); track cancha.id) {
+                <div class="col-12 col-md-6 col-xl-4">
+
+                    <div class="cancha-card h-100">
+
+                        <div class="cancha-img-wrapper">
+                            @if (cancha.foto) {
+                            <img [src]="cancha.foto" class="cancha-img" alt="Cancha {{ cancha.nombre }}">
+                            } @else {
+                            <div class="cancha-placeholder">
+                                <span class="material-symbols-outlined">
+                                    sports_and_outdoors
+                                </span>
+                            </div>
+                            }
+
+                            <span class="estado-badge" [class.estado-activa]="cancha.estado"
+                                [class.estado-inactiva]="!cancha.estado">
+                                {{ cancha.estado ? 'Disponible' : 'No disponible' }}
+                            </span>
+                        </div>
+
+                        <div class="cancha-body">
+
+                            <div class="complex-name">
+                                <i class="bi bi-building me-2"></i>
+                                {{ cancha.complejo?.nombre ?? 'Complejo no especificado' }}
+                            </div>
+
+                            <h5>{{ cancha.nombre }}</h5>
+
+                            <div class="cancha-meta">
+                                <span>
+                                    <i class="bi bi-dribbble me-1"></i>
+                                    {{ cancha.tipo }}
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ cancha.duracion_turno }} min
+                                </span>
+                            </div>
+
+                            <div class="cancha-footer">
+                                <div>
+                                    <span class="price-label">Precio por turno</span>
+                                    <strong>$ {{ cancha.precio }}</strong>
+                                </div>
+
+                                <button class="btn btn-success" [routerLink]="['/dashboard']"
+                                    [state]="{ cancha: cancha }" [disabled]="!cancha.estado">
+                                    <i class="bi bi-calendar-plus me-2"></i>
+                                    Reservar
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                } @empty {
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <h5>No hay canchas disponibles</h5>
+                        <p>No se encontraron canchas con los filtros seleccionados.</p>
+                    </div>
+                </div>
+                }
+
+            </div>
+
+        </div>
+    </section>
+
+</div>

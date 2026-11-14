@@ -1,0 +1,272 @@
+@import "leaflet/dist/leaflet.css";
+
+.agregar-complejo-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(25, 135, 84, 0.12), transparent 32%),
+        #f4f7fb;
+}
+
+.form-card {
+    max-width: 980px;
+    background: #ffffff;
+    border: 1px solid #e9eef5;
+    border-radius: 30px;
+    padding: 2rem;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9eef5;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #198754;
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.form-header h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(2rem, 4vw, 2.7rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+}
+
+.form-header p {
+    margin: 0.75rem 0 0;
+    color: #64748b;
+    max-width: 620px;
+}
+
+.back-btn {
+    border-radius: 999px;
+    font-weight: 800;
+    padding-inline: 1.1rem;
+    white-space: nowrap;
+}
+
+.complex-form {
+    display: grid;
+    gap: 1.4rem;
+}
+
+.form-section {
+    background: #f8fafc;
+    border: 1px solid #e9eef5;
+    border-radius: 24px;
+    padding: 1.35rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    background: #dcfce7;
+    color: #198754;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    flex: 0 0 auto;
+}
+
+.section-title h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+.section-title p {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+.form-label {
+    color: #334155;
+    font-weight: 800;
+    font-size: 0.92rem;
+    margin-bottom: 0.45rem;
+}
+
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon-wrapper>i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+.input-icon-wrapper .form-control {
+    min-height: 48px;
+    border-radius: 16px;
+    border: 1px solid #dbe4ef;
+    padding-left: 2.8rem;
+    color: #0f172a;
+    font-weight: 600;
+    background: #ffffff;
+}
+
+.input-icon-wrapper .form-control::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.input-icon-wrapper .form-control:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.12);
+}
+
+.input-icon-wrapper .form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.input-icon-wrapper .form-control.is-invalid:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.12);
+}
+
+.map-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 16px;
+    background: #ecfdf5;
+    color: #166534;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.85rem;
+}
+
+.mapa-container {
+    width: 100%;
+    min-height: 340px;
+    border-radius: 24px;
+    border: 1px solid #dbe4ef;
+    overflow: hidden;
+    background:
+        linear-gradient(135deg, rgba(25, 135, 84, 0.08), rgba(15, 23, 42, 0.04)),
+        #e2e8f0;
+    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+}
+
+.coordinates-box {
+    margin-top: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 999px;
+    padding: 0.65rem 0.9rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.coordinates-box i {
+    color: #198754;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+.cancel-btn,
+.submit-btn {
+    border-radius: 999px;
+    font-weight: 800;
+    padding: 0.75rem 1.25rem;
+}
+
+.cancel-btn {
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.cancel-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.submit-btn {
+    box-shadow: 0 14px 28px rgba(25, 135, 84, 0.22);
+}
+
+.submit-btn:disabled {
+    opacity: 0.75;
+    box-shadow: none;
+}
+
+.alert {
+    border-radius: 18px;
+    font-weight: 700;
+}
+
+.text-danger {
+    display: block;
+    margin-top: 0.4rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .form-card {
+        padding: 1.25rem;
+        border-radius: 24px;
+    }
+
+    .form-header {
+        flex-direction: column;
+    }
+
+    .back-btn {
+        width: 100%;
+    }
+
+    .form-section {
+        padding: 1rem;
+    }
+
+    .mapa-container {
+        min-height: 280px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .cancel-btn,
+    .submit-btn {
+        width: 100%;
+    }
+}

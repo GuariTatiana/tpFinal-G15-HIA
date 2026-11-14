@@ -1,0 +1,364 @@
+<div class="owner-dashboard">
+    <div class="container px-3 px-lg-4 py-4">
+
+        <div class="dashboard-header mb-4">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Resumen general de tu complejo</p>
+            </div>
+
+            <div class="dashboard-actions">
+
+                <select class="form-select complejo-select" [value]="complejoSeleccionadoId()"
+                    (change)="onComplejoChange($event)" [disabled]="cargandoComplejos() || complejos().length === 0">
+                    @for (complejo of complejos(); track complejo.id) {
+                    <option [value]="complejo.id">
+                        {{ complejo.nombre }}
+                    </option>
+                    }
+                </select>
+
+                <button type="button" class="btn btn-success" (click)="agregarComplejo()">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Agregar complejo
+                </button>
+
+            </div>
+        </div>
+
+        @if (errorMessage()) {
+        <div class="alert alert-danger rounded-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ errorMessage() }}
+        </div>
+        }
+
+        @if (cargandoComplejos()) {
+        <div class="loading-card">
+            <div class="spinner-border text-success mb-3"></div>
+            <p>Cargando dashboard...</p>
+        </div>
+        } @else if (complejos().length === 0) {
+        <div class="empty-dashboard">
+            <i class="bi bi-building-add"></i>
+            <h4>No tenés complejos cargados</h4>
+            <p>Agregá tu primer complejo para comenzar a administrar canchas y reservas.</p>
+        </div>
+        } @else {
+
+        <div class="complex-info mb-4">
+            <div>
+                <span>Complejo seleccionado</span>
+                <strong>{{ complejoSeleccionado()?.nombre }}</strong>
+            </div>
+
+            <div>
+                <span>Dirección</span>
+                <strong>
+                    {{ complejoSeleccionado()?.direccion }},
+                    {{ complejoSeleccionado()?.provincia }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Estado</span>
+                <strong class="text-capitalize">
+                    {{ complejoSeleccionado()?.estado }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-12 col-md-6 col-xl">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-calendar2-check"></i>
+                    </div>
+                    <span>Reservas totales</span>
+                    <h3>{{ reservasTotales() }}</h3>
+                    <small>
+                        <i class="bi bi-arrow-up"></i>
+                        General del complejo
+                    </small>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <span>Confirmadas</span>
+                    <h3>{{ reservasConfirmadas() }}</h3>
+                    <small>
+                        <i class="bi bi-arrow-up"></i>
+                        Reservas pagadas
+                    </small>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <span>Horas reservadas</span>
+                    <h3>{{ horasReservadas() }} h</h3>
+                    <small>
+                        <i class="bi bi-arrow-up"></i>
+                        Turnos confirmados
+                    </small>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <span>Ingresos totales</span>
+                    <h3>${{ ingresosTotales() }}</h3>
+                    <small>
+                        <i class="bi bi-arrow-up"></i>
+                        Pagos aprobados
+                    </small>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl">
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <span>Pendiente de pago</span>
+                    <h3>${{ pendientesDePago() }}</h3>
+                    <small>
+                        <i class="bi bi-hourglass-split"></i>
+                        {{ reservasPendientes() }} reservas
+                    </small>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-12 col-xl-7">
+                <div class="dashboard-card h-100">
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>Gráfico de reservas</h5>
+                            <p>Comparación visual de reservas confirmadas y pendientes</p>
+                        </div>
+
+                        <button class="btn btn-light btn-sm">
+                            Últimos 7 días
+                            <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="fake-line-chart">
+                        <div class="chart-grid"></div>
+
+                        <div class="chart-legend">
+                            <span><i class="legend-dot confirmed"></i> Confirmadas</span>
+                            <span><i class="legend-dot pending"></i> Pendientes</span>
+                        </div>
+
+                        <div class="bars-line">
+                            <div style="height: 35%"><span>01/07</span></div>
+                            <div style="height: 48%"><span>02/07</span></div>
+                            <div style="height: 62%"><span>03/07</span></div>
+                            <div style="height: 54%"><span>04/07</span></div>
+                            <div style="height: 78%"><span>05/07</span></div>
+                            <div style="height: 66%"><span>06/07</span></div>
+                            <div style="height: 88%"><span>07/07</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="dashboard-card h-100">
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>Reservas próximas</h5>
+                            <p>Agenda del complejo seleccionado</p>
+                        </div>
+
+                        <button type="button" class="btn btn-link btn-sm text-success text-decoration-none fw-bold"
+                            (click)="verReservas()">
+                            Ver todas
+                        </button>
+                    </div>
+
+                    @if (cargandoReservas()) {
+                    <div class="mini-loading">
+                        <div class="spinner-border spinner-border-sm text-success"></div>
+                        <span>Cargando reservas...</span>
+                    </div>
+                    } @else if (reservas().length === 0) {
+                    <div class="empty-section">
+                        <i class="bi bi-calendar-x"></i>
+                        <p>No hay reservas para este complejo.</p>
+                    </div>
+                    } @else {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Horario</th>
+                                    <th>Cancha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (reserva of reservasRecientes(); track reserva.id) {
+                                <tr>
+                                    <td>{{ reserva.fecha }}</td>
+                                    <td>{{ reserva.hora_inicio }} - {{ reserva.hora_fin }}</td>
+                                    <td>{{ reserva.cancha?.nombre ?? reserva.cancha_id }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill text-capitalize"
+                                            [class.text-bg-success]="reserva.estado === 'confirmada'"
+                                            [class.text-bg-warning]="reserva.estado === 'pendiente'"
+                                            [class.text-bg-danger]="reserva.estado === 'cancelada'"
+                                            [class.text-bg-secondary]="reserva.estado === 'completada'">
+                                            {{ reserva.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4 mt-1">
+
+            <div class="col-12 col-xl-5">
+                <div class="dashboard-card h-100">
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>Canchas del complejo</h5>
+                            <p>{{ canchasActivas() }} canchas activas</p>
+                        </div>
+
+                        <button type="button" class="btn btn-success btn-sm" (click)="agregarCancha()">
+                            <i class="bi bi-plus-lg me-1"></i>
+                            Agregar cancha
+                        </button>
+                    </div>
+
+                    @if (cargandoCanchas()) {
+                    <div class="mini-loading">
+                        <div class="spinner-border spinner-border-sm text-success"></div>
+                        <span>Cargando canchas...</span>
+                    </div>
+                    } @else if (canchas().length === 0) {
+                    <div class="empty-section">
+                        <i class="bi bi-dribbble"></i>
+                        <p>No hay canchas cargadas.</p>
+                    </div>
+                    } @else {
+                    <div class="court-list">
+                        @for (cancha of canchas(); track cancha.id) {
+                        <div class="court-item">
+                            <div class="court-image">
+                                @if (cancha.foto) {
+                                <img [src]="cancha.foto" alt="Foto cancha">
+                                } @else {
+                                <i class="bi bi-dribbble"></i>
+                                }
+                            </div>
+
+                            <div class="court-info">
+                                <h6>{{ cancha.nombre }}</h6>
+                                <span>{{ cancha.tipo }} · {{ cancha.duracion_turno }} min</span>
+                            </div>
+
+                            <div class="court-actions">
+                                <strong>${{ cancha.precio }}</strong>
+
+                                <span class="badge rounded-pill" [class.text-bg-success]="cancha.estado"
+                                    [class.text-bg-secondary]="!cancha.estado">
+                                    {{ cancha.estado ? "Activa" : "Inactiva" }}
+                                </span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }
+
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-7">
+                <div class="dashboard-card h-100">
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>Reservas recientes</h5>
+                            <p>Últimos movimientos registrados</p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Cancha</th>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (reserva of reservasRecientes(); track reserva.id) {
+                                <tr>
+                                    <td>
+                                        {{ reserva.jugador?.nombre ?? "Jugador" }}
+                                        {{ reserva.jugador?.apellido ?? "" }}
+                                    </td>
+                                    <td>{{ reserva.cancha?.nombre ?? reserva.cancha_id }}</td>
+                                    <td>{{ reserva.fecha }}</td>
+                                    <td>${{ reserva.monto_total }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill text-capitalize"
+                                            [class.text-bg-success]="reserva.estado === 'confirmada'"
+                                            [class.text-bg-warning]="reserva.estado === 'pendiente'"
+                                            [class.text-bg-danger]="reserva.estado === 'cancelada'"
+                                            [class.text-bg-secondary]="reserva.estado === 'completada'">
+                                            {{ reserva.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                } @empty {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No hay reservas recientes.
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+</div>

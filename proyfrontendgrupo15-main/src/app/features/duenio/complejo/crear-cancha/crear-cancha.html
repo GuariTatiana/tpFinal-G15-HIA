@@ -1,0 +1,212 @@
+<section class="crear-cancha-page">
+    <div class="container py-4 py-lg-5">
+        <div class="form-card mx-auto">
+            <div class="form-header">
+                <div>
+                    <span class="section-badge">
+                        <i class="bi bi-dribbble"></i>
+                        Nueva cancha
+                    </span>
+
+                    <h2>Agregar cancha</h2>
+
+                    <p>
+                        Cargá los datos de la cancha para el complejo seleccionado. Luego
+                        quedará disponible para gestionar reservas.
+                    </p>
+                </div>
+
+                <button type="button" class="btn btn-outline-success back-btn" (click)="cancelar()">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Volver
+                </button>
+            </div>
+
+            @if (errorMessage()) {
+            <div class="alert alert-danger border-0 shadow-sm mt-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <form [formGroup]="canchaForm" (ngSubmit)="guardarCancha()" class="cancha-form mt-4" novalidate>
+                <div class="row g-4">
+                    <div class="col-12 col-lg-7">
+                        <div class="form-section h-100">
+                            <div class="section-title">
+                                <div class="section-icon">
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+
+                                <div>
+                                    <h3>Datos principales</h3>
+                                    <p>Información visible para los jugadores al reservar.</p>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="nombre" class="form-label">Nombre de la cancha</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-dribbble"></i>
+
+                                        <input type="text" id="nombre" class="form-control" placeholder="Ej: Cancha 1"
+                                            formControlName="nombre"
+                                            [class.is-invalid]="canchaForm.get('nombre')?.touched && canchaForm.get('nombre')?.invalid" />
+                                    </div>
+
+                                    @if (canchaForm.get('nombre')?.touched && canchaForm.get('nombre')?.invalid) {
+                                    <small class="text-danger">
+                                        El nombre es obligatorio y debe tener al menos 3 caracteres.
+                                    </small>
+                                    }
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label for="tipo" class="form-label">Tipo de cancha</label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-grid-3x3-gap"></i>
+
+                                        <select id="tipo" class="form-select" formControlName="tipo"
+                                            [class.is-invalid]="canchaForm.get('tipo')?.touched && canchaForm.get('tipo')?.invalid">
+                                            <option value="" disabled>Seleccionar tipo</option>
+                                            <option value="Fútbol 5">Fútbol 5</option>
+                                            <option value="Fútbol 7">Fútbol 7</option>
+                                            <option value="Fútbol 8">Fútbol 8</option>
+                                            <option value="Fútbol 9">Fútbol 9</option>
+                                            <option value="Fútbol 11">Fútbol 11</option>
+                                        </select>
+                                    </div>
+
+                                    @if (canchaForm.get('tipo')?.touched && canchaForm.get('tipo')?.invalid) {
+                                    <small class="text-danger">Seleccioná un tipo de cancha.</small>
+                                    }
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label for="precio_hora" class="form-label">Precio por turno</label>
+
+                                    <div class="input-group custom-input-group">
+                                        <span class="input-group-text">$</span>
+
+                                        <input type="number" id="precio_hora" class="form-control" placeholder="12000"
+                                            formControlName="precio_hora"
+                                            [class.is-invalid]="canchaForm.get('precio_hora')?.touched && canchaForm.get('precio_hora')?.invalid" />
+                                    </div>
+
+                                    @if (canchaForm.get('precio_hora')?.touched && canchaForm.get('precio_hora')?.invalid) {
+                                    <small class="text-danger">Ingresá un precio válido.</small>
+                                    }
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label for="duracion_turno" class="form-label">Duración del turno</label>
+
+                                    <div class="input-group custom-input-group">
+                                        <input type="number" id="duracion_turno" class="form-control" placeholder="60"
+                                            formControlName="duracion_turno"
+                                            [class.is-invalid]="canchaForm.get('duracion_turno')?.touched && canchaForm.get('duracion_turno')?.invalid" />
+
+                                        <span class="input-group-text">min</span>
+                                    </div>
+
+                                    @if (canchaForm.get('duracion_turno')?.touched &&
+                                    canchaForm.get('duracion_turno')?.invalid) {
+                                    <small class="text-danger">
+                                        La duración debe ser de al menos 30 minutos.
+                                    </small>
+                                    }
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label d-block">Estado</label>
+
+                                    <div class="estado-box">
+                                        <div class="estado-content">
+                                            <div class="estado-icon">
+                                                <i class="bi bi-check-circle"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Cancha activa</strong>
+                                                <p>Disponible para recibir reservas.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="estado"
+                                                formControlName="estado" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="form-section foto-section h-100">
+                            <div class="section-title">
+                                <div class="section-icon">
+                                    <i class="bi bi-image"></i>
+                                </div>
+
+                                <div>
+                                    <h3>Foto de la cancha</h3>
+                                    <p>Agregá una imagen para mejorar la presentación.</p>
+                                </div>
+                            </div>
+
+                            <div class="foto-preview">
+                                @if (previewImage()) {
+                                <img [src]="previewImage()" alt="Foto de la cancha" />
+                                } @else {
+                                <div class="foto-placeholder">
+                                    <div class="placeholder-icon">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+
+                                    <strong>Sin imagen cargada</strong>
+                                    <span>PNG, JPG o WebP hasta 2 MB.</span>
+                                </div>
+                                }
+                            </div>
+
+                            <label for="foto" class="btn btn-outline-success upload-btn">
+                                <i class="bi bi-camera-fill me-2"></i>
+                                Seleccionar imagen
+                            </label>
+
+                            <input type="file" id="foto" class="d-none" accept="image/png,image/jpeg,image/webp"
+                                (change)="onFileSelected($event)" />
+
+                            <div class="upload-info">
+                                <i class="bi bi-info-circle"></i>
+                                <span>
+                                    Usá una imagen horizontal y clara. Se guardará en formato Base64.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-light cancel-btn" (click)="cancelar()">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-success submit-btn" [disabled]="isLoading()">
+                        @if (isLoading()) {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Guardando...
+                        } @else {
+                        <i class="bi bi-save me-2"></i>
+                        Guardar cancha
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

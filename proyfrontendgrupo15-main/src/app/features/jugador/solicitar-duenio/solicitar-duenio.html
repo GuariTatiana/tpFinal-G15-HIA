@@ -1,0 +1,297 @@
+<div class="solicitud-page">
+    <div class="container-fluid px-3 px-lg-4 py-4">
+
+        <div class="solicitud-header mb-4">
+            <div>
+                <span class="page-badge">
+                    <i class="bi bi-building-add me-2"></i>
+                    Solicitud de dueño
+                </span>
+
+                <h1>Solicitar habilitación como dueño</h1>
+
+                <p>
+                    Completá los datos de tu complejo para que un administrador revise tu solicitud.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-outline-success" (click)="volverAlPerfil()">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver al perfil
+            </button>
+        </div>
+
+        @if (cargandoSolicitud()) {
+        <div class="loading-card">
+            <div class="spinner-border text-success mb-3"></div>
+            <p>Cargando información...</p>
+        </div>
+        } @else {
+
+        @if (solicitudActual()) {
+        <div class="estado-solicitud-card mb-4">
+            <div class="estado-icon">
+                @if (solicitudActual()?.estado === 'pendiente') {
+                <i class="bi bi-hourglass-split"></i>
+                } @else if (solicitudActual()?.estado === 'aprobada') {
+                <i class="bi bi-check-circle"></i>
+                } @else {
+                <i class="bi bi-x-circle"></i>
+                }
+            </div>
+
+            <div class="estado-content">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <h5 class="mb-0">Última solicitud enviada</h5>
+
+                    <span class="badge rounded-pill text-capitalize"
+                        [class]="getEstadoClass(solicitudActual()?.estado || '')">
+                        {{ solicitudActual()?.estado }}
+                    </span>
+                </div>
+
+                <p class="mb-1">
+                    <strong>Complejo:</strong>
+                    {{ solicitudActual()?.nombre_complejo }}
+                </p>
+
+                <p class="mb-0 text-muted">
+                    @if (solicitudActual()?.estado === 'pendiente') {
+                    Tu solicitud está pendiente de revisión. No podés enviar otra hasta que el admin la procese.
+                    } @else if (solicitudActual()?.estado === 'aprobada') {
+                    Tu solicitud fue aprobada. Cerrá sesión e ingresá nuevamente si todavía no ves el panel de dueño.
+                    } @else {
+                    Tu solicitud fue rechazada. Podés enviar una nueva corrigiendo los datos.
+                    }
+                </p>
+
+                @if (solicitudActual()?.respuesta_admin) {
+                <div class="admin-response mt-3">
+                    <strong>Respuesta del admin:</strong>
+                    <p>{{ solicitudActual()?.respuesta_admin }}</p>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        @if (successMessage()) {
+        <div class="alert alert-success rounded-4">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ successMessage() }}
+        </div>
+        }
+
+        @if (errorMessage()) {
+        <div class="alert alert-danger rounded-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ errorMessage() }}
+        </div>
+        }
+
+        @if (solicitudActual()?.estado !== 'pendiente' && solicitudActual()?.estado !== 'aprobada') {
+
+        <div class="row g-4">
+
+            <div class="col-12 col-xl-7">
+                <div class="solicitud-card">
+
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>
+                                <i class="bi bi-file-earmark-text me-2 text-success"></i>
+                                Datos del complejo
+                            </h5>
+                            <p>
+                                Esta información será revisada por el administrador.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form [formGroup]="solicitudForm" (ngSubmit)="enviarSolicitud()" novalidate>
+
+                        <div class="row g-3">
+
+                            <div class="col-12">
+                                <div class="form-group-custom">
+                                    <label for="nombre_complejo" class="form-label">
+                                        Nombre del complejo
+                                    </label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-building"></i>
+
+                                        <input type="text" id="nombre_complejo" class="form-control"
+                                            placeholder="Ej: Complejo La Canchita" formControlName="nombre_complejo"
+                                            [class.is-invalid]="solicitudForm.get('nombre_complejo')?.touched && solicitudForm.get('nombre_complejo')?.invalid">
+                                    </div>
+
+                                    @if (solicitudForm.get('nombre_complejo')?.touched &&
+                                    solicitudForm.get('nombre_complejo')?.invalid) {
+                                    <div class="invalid-message">
+                                        El nombre del complejo es obligatorio.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group-custom">
+                                    <label for="direccion_complejo" class="form-label">
+                                        Dirección del complejo
+                                    </label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-geo-alt"></i>
+
+                                        <input type="text" id="direccion_complejo" class="form-control"
+                                            placeholder="Ej: Av. Siempre Viva 123" formControlName="direccion_complejo"
+                                            [class.is-invalid]="solicitudForm.get('direccion_complejo')?.touched && solicitudForm.get('direccion_complejo')?.invalid">
+                                    </div>
+
+                                    @if (solicitudForm.get('direccion_complejo')?.touched &&
+                                    solicitudForm.get('direccion_complejo')?.invalid) {
+                                    <div class="invalid-message">
+                                        La dirección es obligatoria.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="provincia" class="form-label">
+                                        Provincia
+                                    </label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-map"></i>
+
+                                        <input type="text" id="provincia" class="form-control"
+                                            placeholder="Ej: Buenos Aires" formControlName="provincia"
+                                            [class.is-invalid]="solicitudForm.get('provincia')?.touched && solicitudForm.get('provincia')?.invalid">
+                                    </div>
+
+                                    @if (solicitudForm.get('provincia')?.touched &&
+                                    solicitudForm.get('provincia')?.invalid) {
+                                    <div class="invalid-message">
+                                        La provincia es obligatoria.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-custom">
+                                    <label for="telefono_contacto" class="form-label">
+                                        Teléfono de contacto
+                                    </label>
+
+                                    <div class="input-icon-wrapper">
+                                        <i class="bi bi-telephone"></i>
+
+                                        <input type="text" id="telefono_contacto" class="form-control"
+                                            placeholder="Ej: 1122334455" formControlName="telefono_contacto"
+                                            [class.is-invalid]="solicitudForm.get('telefono_contacto')?.touched && solicitudForm.get('telefono_contacto')?.invalid">
+                                    </div>
+
+                                    @if (solicitudForm.get('telefono_contacto')?.touched &&
+                                    solicitudForm.get('telefono_contacto')?.invalid) {
+                                    <div class="invalid-message">
+                                        El teléfono es obligatorio.
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group-custom">
+                                    <label for="mensaje" class="form-label">
+                                        Mensaje opcional
+                                    </label>
+
+                                    <textarea id="mensaje" class="form-control textarea-custom" rows="4"
+                                        placeholder="Contanos brevemente por qué querés registrar tu complejo..."
+                                        formControlName="mensaje"></textarea>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="form-actions mt-4">
+                            <button type="button" class="btn btn-light" (click)="volverAlInicio()">
+                                Cancelar
+                            </button>
+
+                            <button type="submit" class="btn btn-success btn-lg" [disabled]="isLoading()">
+                                @if (isLoading()) {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Enviando...
+                                } @else {
+                                <i class="bi bi-send me-2"></i>
+                                Enviar solicitud
+                                }
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="info-card h-100">
+
+                    <div class="info-card-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+
+                    <h5>¿Qué pasa después?</h5>
+
+                    <div class="step-list">
+
+                        <div class="step-item">
+                            <span>1</span>
+                            <div>
+                                <strong>Enviás la solicitud</strong>
+                                <p>Tu formulario queda registrado como pendiente.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <span>2</span>
+                            <div>
+                                <strong>El admin la revisa</strong>
+                                <p>Se validan los datos del complejo y del usuario.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <span>3</span>
+                            <div>
+                                <strong>Se habilita tu cuenta</strong>
+                                <p>Si se aprueba, tu rol cambia a dueño.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="info-alert mt-4">
+                        <i class="bi bi-info-circle"></i>
+                        <p>
+                            Si tu solicitud es aprobada, puede que tengas que cerrar sesión
+                            y volver a ingresar para ver el panel de dueño.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        }
+
+        }
+
+    </div>
+</div>

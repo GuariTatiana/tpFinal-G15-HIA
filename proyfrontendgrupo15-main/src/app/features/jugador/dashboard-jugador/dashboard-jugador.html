@@ -1,0 +1,261 @@
+<div class="reserva-page">
+    <div class="container-fluid px-3 px-lg-4 py-4">
+
+        @if (canchaSeleccionada()) {
+
+        <div class="reserva-header mb-4">
+            <div>
+                <span class="page-badge">
+                    <i class="bi bi-calendar-plus me-2"></i>
+                    Nueva reserva
+                </span>
+
+                <h1>Reservar cancha</h1>
+
+                <p>
+                    Seleccioná una fecha y un horario disponible para confirmar tu turno.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-outline-success" routerLink="/inicio">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver a canchas
+            </button>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-12 col-xl-7">
+
+                <div class="reserva-card h-100">
+
+                    <div class="card-header-custom">
+                        <div>
+                            <h5>
+                                <i class="bi bi-clock-history me-2 text-success"></i>
+                                Elegí tu turno
+                            </h5>
+                            <p>Los horarios se actualizan según la fecha seleccionada.</p>
+                        </div>
+                    </div>
+
+                    <div class="date-box mb-4">
+                        <label for="fechaReserva" class="form-label">
+                            Fecha de reserva
+                        </label>
+
+                        <div class="date-input-wrapper">
+                            <i class="bi bi-calendar3"></i>
+
+                            <input id="fechaReserva" type="date" class="form-control" [value]="fechaElegida()"
+                                (change)="cambiarFecha($event)">
+                        </div>
+                    </div>
+
+                    <div class="horarios-section">
+                        <div class="section-mini-header">
+                            <div>
+                                <h6>Horarios disponibles</h6>
+                                <span>
+                                    @if (horariosDisponibles().length > 0) {
+                                    {{ horariosDisponibles().length }} turnos disponibles
+                                    } @else {
+                                    Sin turnos disponibles
+                                    }
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="horarios-grid">
+                            @for (horario of horariosDisponibles(); track horario.hora_inicio) {
+                            <button type="button" class="horario-btn"
+                                [class.horario-active]="horarioElegido()?.hora_inicio === horario.hora_inicio"
+                                (click)="seleccionarHorario(horario)">
+                                <i class="bi bi-clock"></i>
+
+                                <span>
+                                    {{ horario.hora_inicio.substring(0,5) }}
+                                </span>
+
+                                <small>
+                                    hasta {{ horario.hora_fin.substring(0,5) }}
+                                </small>
+                            </button>
+                            }
+
+                            @if (horariosDisponibles().length === 0) {
+                            <div class="empty-horarios">
+                                <i class="bi bi-calendar-x"></i>
+                                <h6>No hay horarios disponibles</h6>
+                                <p>Probá seleccionando otra fecha.</p>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="reserva-summary mt-4">
+
+                        <div class="summary-item">
+                            <span>Cancha</span>
+                            <strong>{{ canchaSeleccionada()?.nombre }}</strong>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Fecha</span>
+                            <strong>{{ fechaElegida() }}</strong>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Horario</span>
+                            <strong>
+                                @if (horarioElegido()) {
+                                {{ horarioElegido()?.hora_inicio?.substring(0,5) }}
+                                -
+                                {{ horarioElegido()?.hora_fin?.substring(0,5) }}
+                                } @else {
+                                Sin seleccionar
+                                }
+                            </strong>
+                        </div>
+
+                        <div class="summary-price">
+                            <span>Total</span>
+                            <strong>${{ canchaSeleccionada()?.precio }}</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="reserva-actions mt-4">
+
+                        <button type="button" class="btn btn-light" routerLink="/inicio">
+                            Cancelar
+                        </button>
+
+                        <button type="button" class="btn btn-success btn-lg"
+                            [disabled]="!fechaElegida() || !horarioElegido() || !tipoElegido()" (click)="reservar()">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Confirmar reserva
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-12 col-xl-5">
+
+                <div class="cancha-detail-card h-100">
+
+                    <div class="cancha-image-wrapper">
+                        @if (canchaSeleccionada()?.foto) {
+                        <img [src]="canchaSeleccionada()?.foto" alt="Foto de {{ canchaSeleccionada()?.nombre }}">
+                        } @else {
+                        <div class="cancha-placeholder">
+                            <i class="bi bi-dribbble"></i>
+                        </div>
+                        }
+
+                        <span class="cancha-status">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Disponible
+                        </span>
+                    </div>
+
+                    <div class="cancha-detail-body">
+
+                        <div class="complex-pill">
+                            <i class="bi bi-building me-2"></i>
+                            {{ canchaSeleccionada()?.complejo?.nombre ?? 'Complejo no especificado' }}
+                        </div>
+
+                        <h3>{{ canchaSeleccionada()?.nombre }}</h3>
+
+                        <div class="cancha-meta">
+                            <span>
+                                <i class="bi bi-dribbble me-1"></i>
+                                {{ canchaSeleccionada()?.tipo }}
+                            </span>
+
+                            <span>
+                                <i class="bi bi-clock me-1"></i>
+                                {{ canchaSeleccionada()?.duracion_turno ?? 60 }} min
+                            </span>
+
+                            <span>
+                                <i class="bi bi-cash-stack me-1"></i>
+                                ${{ canchaSeleccionada()?.precio }}
+                            </span>
+                        </div>
+
+                        <hr>
+
+                        <div class="location-box">
+                            <div class="location-icon">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+
+                            <div>
+                                <span>Ubicación</span>
+                                <strong>
+                                    {{ canchaSeleccionada()?.complejo?.direccion ?? 'Dirección no especificada' }}
+                                </strong>
+
+                                @if (canchaSeleccionada()?.complejo?.provincia) {
+                                <small>
+                                    {{ canchaSeleccionada()?.complejo?.provincia }}
+                                </small>
+                                }
+                            </div>
+                        </div>
+
+                        <button type="button" class="map-link" (click)="abrirMapa()">
+                            <i class="bi bi-map me-2"></i>
+                            Abrir mapa
+                        </button>
+
+                        <div class="info-alert mt-4">
+                            <i class="bi bi-info-circle"></i>
+                            <p>
+                                Una vez confirmada la reserva, podrás verla desde tu perfil y realizar el pago si queda
+                                pendiente.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        } @else {
+
+        <div class="no-cancha-wrapper">
+
+            <div class="no-cancha-card">
+
+                <div class="no-cancha-icon">
+                    <i class="bi bi-calendar2-x"></i>
+                </div>
+
+                <h4>No seleccionaste ninguna cancha</h4>
+
+                <p>
+                    Para realizar una reserva, primero seleccioná una cancha disponible desde la pantalla de inicio.
+                </p>
+
+                <button type="button" class="btn btn-success btn-lg" routerLink="/inicio">
+                    <i class="bi bi-search me-2"></i>
+                    Ver canchas disponibles
+                </button>
+
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+</div>
