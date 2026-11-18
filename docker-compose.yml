@@ -1,0 +1,64 @@
+# Despliegue (producción local detrás de túnel). Uso:
+#   cp .env.example .env   # completar valores reales (NO se versiona)
+#   docker compose up -d --build
+name: g15
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: g15-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?definir DB_PASSWORD en .env}
+    volumes:
+      - g15-pgdata:/var/lib/postgresql/data
+    networks: [g15-db-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${BACKEND_IMAGE:-g15-backend:local}
+    build: ./TPFinalGrupo15_Backend
+    container_name: g15-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?definir JWT_SECRET en .env}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    networks: [g15-app-net, g15-db-net]   # sin puertos publicados al host
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-g15-frontend:local}
+    build: ./proyfrontendgrupo15-main
+    container_name: g15-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"   # único punto de entrada; el túnel apunta acá
+    networks: [g15-app-net]
+
+volumes:
+  g15-pgdata:
+    name: g15-pgdata
+
+networks:
+  g15-app-net:
+    name: g15-app-net
+  g15-db-net:
+    name: g15-db-net

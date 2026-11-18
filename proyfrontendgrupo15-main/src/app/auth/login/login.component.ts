@@ -8,7 +8,7 @@ import {
 } from "@angular/forms";
 import { AuthService } from "../../shared/services";
 import { Router, RouterLink } from "@angular/router";
-import { environment } from "../../../environments/environment.development";
+import { environment } from "../../../environments/environment";
 
 declare var google: any;
 

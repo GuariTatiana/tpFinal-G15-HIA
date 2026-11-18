@@ -46,7 +46,7 @@ var app = express();
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:4201',
+  origin: (process.env.CORS_ORIGIN || 'http://localhost:4201').split(','),
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
