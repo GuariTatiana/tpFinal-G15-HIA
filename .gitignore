@@ -1,11 +1,3 @@
-# Ignore environment files with credentials
-mantis/.env
-nextcloud/.env
-# Ignore backup volumes (if any)
-nextcloud/nextcloud_backup/**
-nextcloud/traefik_certificates/**
-
-# General ignore rules (from main)
 .env
 .env.*
 !.env.example

@@ -1,5 +1,0 @@
-.env
-*.sql
-*.sql.gz
-*.tar.gz
-backups_locales/
