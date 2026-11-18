@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
-import { environment } from "../../../environments/environment.development";
+import { environment } from "../../../environments/environment";
 import { BehaviorSubject, catchError, filter, Observable, of, take, tap } from "rxjs";
 import { AuthResponse } from "../interface/auth.interface";
 import { PerfilResponse, UsuarioPerfil } from "../interface/usuario.interface";
