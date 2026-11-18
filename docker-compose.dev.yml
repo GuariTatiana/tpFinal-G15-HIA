@@ -1,0 +1,19 @@
+# Desarrollo: se combina con el compose base.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"        # acceso local para depurar (solo dev)
+  backend:
+    build:
+      context: ./TPFinalGrupo15_Backend
+      target: deps
+    command: sh -c "npm ci && npx nodemon index.js"
+    user: root
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./TPFinalGrupo15_Backend:/app
+      - /app/node_modules
+    ports:
+      - "127.0.0.1:3000:3000"
