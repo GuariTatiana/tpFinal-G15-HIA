@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mariadb:10.5
+    container_name: mantis_db_hia
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mantis_db_data:/var/lib/mysql
+    networks:
+      - mantis_net
+
+  mantis:
+    image: vimagick/mantisbt:latest
+    container_name: mantis_app_hia
+    restart: unless-stopped
+    ports:
+      - "${MANTIS_PORT}:80"
+    environment:
+      MANTIS_DB_HOST: db
+      MANTIS_DB_USER: ${MYSQL_USER}
+      MANTIS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      MANTIS_DB_NAME: ${MYSQL_DATABASE}
+    depends_on:
+      - db
+    networks:
+      - mantis_net
+
+volumes:
+  mantis_db_data:
+    name: mantis_db_data
+
+networks:
+  mantis_net:
+    name: mantis_net
