@@ -1,0 +1,51 @@
+services:
+  db-primary:
+    image: postgres:16-alpine
+    container_name: futbolgest-db-primary
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+      - ./primary-init:/docker-entrypoint-initdb.d
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - replication-net
+
+  db-replica:
+    image: postgres:16-alpine
+    container_name: futbolgest-db-replica
+    user: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGPASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - replica_data:/var/lib/postgresql/data
+      - ./replica-init:/docker-entrypoint-initdb.d
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/01-setup-replica.sh"]
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    depends_on:
+      - db-primary
+    networks:
+      - replication-net
+
+volumes:
+  primary_data:
+  replica_data:
+
+networks:
+  replication-net:
+    driver: bridge
