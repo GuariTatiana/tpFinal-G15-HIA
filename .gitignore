@@ -1,3 +1,4 @@
+infra-monitoreo/.env
 .env
 .env.*
 !.env.example
