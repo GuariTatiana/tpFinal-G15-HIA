@@ -9,7 +9,7 @@
       "typeVersion": 1,
       "position": [
         272,
-        272
+        224
       ]
     },
     {
@@ -79,6 +79,25 @@
         1168,
         368
       ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        416
+      ],
+      "id": "21989882-3a42-4da8-ab31-10f83725f256",
+      "name": "Schedule Trigger"
     }
   ],
   "pinData": {},
@@ -127,15 +146,26 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Consultar Metricas Prometheus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": true
   },
-  "versionId": "b2eee0d2-1f28-4dc2-8c20-3feb037e7596",
+  "versionId": "d96f89fd-bb5d-4e81-9e33-bbae82472517",
   "meta": {
     "instanceId": "a38c318cfb5d0c4ec943d8ba7c344e4f1bb1c91ec3117823b98d42d63767bd52"
   },
