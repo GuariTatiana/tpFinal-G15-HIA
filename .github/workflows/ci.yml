@@ -1,0 +1,66 @@
+name: CI
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (sintaxis + auditoría)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: TPFinalGrupo15_Backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: TPFinalGrupo15_Backend/package-lock.json }
+      - run: npm ci
+      - name: Verificar sintaxis de todos los .js
+        run: find . -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
+      - name: Auditoría de dependencias (bloquea en high/critical)
+        run: npm audit --omit=dev --audit-level=high
+
+  frontend:
+    name: Frontend (tests + build)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: proyfrontendgrupo15-main } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: proyfrontendgrupo15-main/package-lock.json }
+      - run: npm ci
+      - name: "Lint (informativo, hay deuda de formato previa)"
+        run: npx biome lint . || true
+      - name: Tests unitarios
+        run: npx ng test --watch=false
+      - name: Build de producción
+        run: npx ng build --configuration production
+      - name: Verificar que el build no apunta a localhost
+        run: "! grep -rq 'localhost:3000' dist/frontend/browser"
+
+  docker:
+    name: Imágenes Docker + escaneo Trivy
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend
+        run: docker build -t g15-backend:ci TPFinalGrupo15_Backend
+      - name: Build frontend
+        run: docker build -t g15-frontend:ci proyfrontendgrupo15-main
+      - name: Trivy (bloquea en CRITICAL con fix disponible)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: g15-backend:ci
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Trivy frontend
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: g15-frontend:ci
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
