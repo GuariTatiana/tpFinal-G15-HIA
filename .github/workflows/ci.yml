@@ -51,14 +51,14 @@ jobs:
       - name: Build frontend
         run: docker build -t g15-frontend:ci proyfrontendgrupo15-main
       - name: Trivy (bloquea en CRITICAL con fix disponible)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: g15-backend:ci
           severity: CRITICAL
           ignore-unfixed: true
           exit-code: "1"
       - name: Trivy frontend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: g15-frontend:ci
           severity: CRITICAL
