@@ -114,6 +114,8 @@ services:
     networks:
       - red_monitoreo
       - g15-app-net
+      - mantis_net
+      - nextcloud_net
 
 volumes:
   prometheus_data:
@@ -130,3 +132,7 @@ networks:
   replication-net:
     external: true
     name: tp-futbolgest-replicacion_replication-net
+  mantis_net:
+    external: true
+  nextcloud_net:
+    external: true
