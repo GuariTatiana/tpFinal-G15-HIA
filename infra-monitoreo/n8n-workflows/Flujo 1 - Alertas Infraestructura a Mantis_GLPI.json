@@ -27,29 +27,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://mantis-o-glpi:80/api/rest/issues",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "TOKEN_API_MANTIS_AQUI"
-            }
-          ]
-        },
+        "url": "http://host.docker.internal:8989/api/rest/index.php/issues",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "summary",
-              "value": "={{ 'Alerta Infraestructura: ' + ($json.body.title || 'Servicio Caido') }}"
-            },
-            {
-              "name": "description",
-              "value": "={{ 'Detectado por Prometheus/Grafana. Detalle: ' + JSON.stringify($json.body) }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  summary: \"Alerta Infraestructura: \" + ($json.body?.title || \"Servicio Caido\"),\n  description: $json.body?.message || \"Incidencia generada automaticamente desde Grafana via n8n.\",\n  category: { id: 1 },\n  project: { id: 1 }\n}) }}",
         "options": {}
       },
       "id": "cdfe0c6c-48cf-4254-92b8-6cf7f1db3230",
@@ -60,6 +43,12 @@
         464,
         0
       ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "0rgJGFEEjuSc6lOl",
+          "name": "Mantis API Token"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
@@ -173,7 +162,7 @@
     "binaryMode": "separate",
     "availableInMCP": true
   },
-  "versionId": "b9589f57-0f5b-4d81-a59f-97ef7832c0e6",
+  "versionId": "f6569f80-0336-448a-88ed-d9941f978021",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a38c318cfb5d0c4ec943d8ba7c344e4f1bb1c91ec3117823b98d42d63767bd52"

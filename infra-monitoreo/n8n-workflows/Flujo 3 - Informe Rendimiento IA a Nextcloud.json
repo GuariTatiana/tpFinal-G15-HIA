@@ -42,13 +42,13 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "={{ 'http://nextcloud:80/remote.php/dav/files/admin/Informes/' + $json.nombre_archivo }}",
+        "url": "=http://nextcloud_app/remote.php/dav/files/n8n-bot/informe_rendimiento_{{ $now.format('yyyy-MM-dd_HH-mm') }}.md",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBasicAuth",
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "text/markdown",
-        "body": "={{ $json.reporte }}",
+        "body": "={{ $json.reporte || $json.output || JSON.stringify($json, null, 2) }}",
         "options": {}
       },
       "id": "8240f0cd-011d-4936-809d-8ee47045ead2",
@@ -59,6 +59,12 @@
         928,
         272
       ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "V25HUGkAS930PwA2",
+          "name": "Nextcloud Bot n8n"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
@@ -129,7 +135,7 @@
     "binaryMode": "separate",
     "availableInMCP": true
   },
-  "versionId": "c3f70613-0ca1-4a27-bf7e-582b231d5ec2",
+  "versionId": "b2eee0d2-1f28-4dc2-8c20-3feb037e7596",
   "meta": {
     "instanceId": "a38c318cfb5d0c4ec943d8ba7c344e4f1bb1c91ec3117823b98d42d63767bd52"
   },
