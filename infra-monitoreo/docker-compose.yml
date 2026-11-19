@@ -5,14 +5,16 @@ services:
     restart: unless-stopped
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     networks:
       - red_monitoreo
+      - g15-app-net
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -43,6 +45,37 @@ services:
     networks:
       - red_monitoreo
 
+  # Exportador para la BD principal de la App (g15-postgres)
+  postgres-exporter-app:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-app
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USER}:${DB_PASSWORD}@g15-postgres:5432/${DB_NAME}?sslmode=disable"
+    networks:
+      - red_monitoreo
+      - g15-db-net
+
+  # Exportador para el Clúster de Replicación (futbolgest-db-primary)
+  postgres-exporter-replica:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-replica
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${REPL_USER}:${REPL_PASSWORD}@futbolgest-db-primary:5432/${REPL_DB}?sslmode=disable"
+    networks:
+      - red_monitoreo
+      - replication-net
+
+  # Exportador de Disponibilidad HTTP (Frontend y Backend)
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    restart: unless-stopped
+    networks:
+      - red_monitoreo
+      - g15-app-net
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -52,8 +85,9 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     depends_on:
       - prometheus
     networks:
@@ -66,13 +100,20 @@ services:
     environment:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      - N8N_RESTRICT_FILE_ACCESS_TO=/backups
       - GENERIC_TIMEZONE=America/Argentina/Jujuy
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
     volumes:
       - n8n_data:/home/node/.n8n
+      - ../tp-futbolgest-docker/backups:/backups:ro
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
     networks:
       - red_monitoreo
+      - g15-app-net
 
 volumes:
   prometheus_data:
@@ -82,3 +123,10 @@ volumes:
 networks:
   red_monitoreo:
     driver: bridge
+  g15-app-net:
+    external: true
+  g15-db-net:
+    external: true
+  replication-net:
+    external: true
+    name: tp-futbolgest-replicacion_replication-net
