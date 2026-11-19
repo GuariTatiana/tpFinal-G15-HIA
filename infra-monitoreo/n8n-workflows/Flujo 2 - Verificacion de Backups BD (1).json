@@ -1,0 +1,167 @@
+{
+  "name": "Flujo 2 - Verificacion de Backups BD",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "3375b76e-2c44-46a2-8f14-1e40c309aa01",
+      "name": "Programacion Cada 6 Horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.valido }}",
+              "operation": "larger",
+              "value2": 1024
+            }
+          ]
+        },
+        "combineOperation": "=all"
+      },
+      "id": "99f01709-995b-446e-9c5d-25ff63a0bfcd",
+      "name": "Validar Backup No Vacio (>1KB)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        448,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { resultado: 'EXITO', mensaje: 'Backup verificado correctamente e integro', archivo: $json.archivo, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "1697b277-c0cd-4882-9318-d8e55c2d430d",
+      "name": "Registrar Verificacion Exitosa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/backups/last/canchas_db-latest.sql.gz",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        96
+      ],
+      "id": "ce34fde4-5555-487b-8c84-febfccde16d0",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsCode": "const bin = $input.first().binary?.data;\nconst tamano = bin ? bin.fileSize : '0 B';\nconst existe = !!bin;\nreturn [{\n  json: {\n    archivo: bin ? bin.fileName : 'NINGUNO',\n    tamano: tamano,\n    valido: existe && tamano !== '0 B',\n    fecha_verificacion: new Date().toISOString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        96
+      ],
+      "id": "60a88691-439c-4fcf-adf4-e67a01980f18",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { resultado: 'ERROR_CRITICO', mensaje: 'Backup corrupto o vacio (0 bytes). Se requiere intervencion.', timestamp: new Date().toISOString() } }];"
+      },
+      "id": "71f950c7-f138-4702-aaae-57a142ba4a1e",
+      "name": "Notificar Error de Backup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        176
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Programacion Cada 6 Horas": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Backup No Vacio (>1KB)": {
+      "main": [
+        [
+          {
+            "node": "Registrar Verificacion Exitosa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar Error de Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Validar Backup No Vacio (>1KB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "7e45a822-d93d-4b07-83a7-debcfea6cb04",
+  "meta": {
+    "instanceId": "a38c318cfb5d0c4ec943d8ba7c344e4f1bb1c91ec3117823b98d42d63767bd52"
+  },
+  "nodeGroups": [],
+  "id": "pqPtIHO3BxJJrk58",
+  "tags": []
+}

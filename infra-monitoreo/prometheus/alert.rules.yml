@@ -1,0 +1,47 @@
+groups:
+  - name: alertas_futbolgest
+    rules:
+      - alert: ContenedorOServicioCaido
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servicio caído: {{ $labels.job }}"
+          description: "El servicio {{ $labels.instance }} dejó de responder hace más de 30 segundos."
+
+      - alert: AplicacionWebInaccesible
+        expr: probe_success == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "App inaccesible: {{ $labels.instance }}"
+          description: "El chequeo HTTP hacia {{ $labels.instance }} falló."
+
+      - alert: AltoUsoCPU
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Uso de CPU alto (>85%)"
+          description: "La CPU del host superó el umbral del 85%."
+
+      - alert: AltoUsoRAM
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memoria RAM crítica (>85%)"
+          description: "La memoria disponible cayó por debajo del 15%."
+
+      - alert: RetrasoReplicacionAlto
+        expr: pg_replication_lag > 5
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Retraso en replicación PostgreSQL"
+          description: "La réplica tiene un retraso superior a 5 segundos respecto al nodo primario."

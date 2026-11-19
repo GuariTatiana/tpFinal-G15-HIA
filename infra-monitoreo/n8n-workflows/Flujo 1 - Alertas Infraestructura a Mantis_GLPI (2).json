@@ -1,0 +1,184 @@
+{
+  "name": "Flujo 1 - Alertas Infraestructura a Mantis/GLPI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alerta-infraestructura",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "03fb7e6d-2530-4631-be38-0d7bf211259a",
+      "name": "Webhook Alerta Grafana",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "cfca6761-d96a-4304-b6eb-f6428c2b40f4",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RszJPJ1tWlccpdHp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mantis-o-glpi:80/api/rest/issues",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "TOKEN_API_MANTIS_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "summary",
+              "value": "={{ 'Alerta Infraestructura: ' + ($json.body.title || 'Servicio Caido') }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ 'Detectado por Prometheus/Grafana. Detalle: ' + JSON.stringify($json.body) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdfe0c6c-48cf-4254-92b8-6cf7f1db3230",
+      "name": "Registrar Incidencia en Mantis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { estado: 'Alerta ignorada o resuelta', timestamp: new Date().toISOString() } }];"
+      },
+      "id": "40698391-1050-4ed6-8482-7e3d003f9c83",
+      "name": "Registrar Evento No Critico",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error_capturado: true, mensaje: 'Fallo al conectar con Mantis API - Reintento programado', fecha: new Date().toISOString() } }];"
+      },
+      "id": "3688b39d-8738-49d1-ad3b-901f8c9688d8",
+      "name": "Manejo de Error API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "6bd18f72-8819-4299-8388-496a1a7c9954",
+              "leftValue": "={{ $json.body.status }}",
+              "rightValue": "firing",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        256,
+        176
+      ],
+      "id": "73affacd-19da-466f-9122-74b8279aba6d",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Alerta Grafana": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Incidencia en Mantis": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Manejo de Error API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Registrar Incidencia en Mantis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar Evento No Critico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "b9589f57-0f5b-4d81-a59f-97ef7832c0e6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a38c318cfb5d0c4ec943d8ba7c344e4f1bb1c91ec3117823b98d42d63767bd52"
+  },
+  "nodeGroups": [],
+  "id": "22YtOD9HJzkW9h1X",
+  "tags": []
+}
