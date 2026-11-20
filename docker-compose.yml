@@ -32,14 +32,19 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      # DB_APP_PASSWORD permite apuntar a otra base (ej. dataset masivo en
+      # futbolgest-db) sin cambiar la clave del postgres local del stack.
+      DB_PASSWORD: ${DB_APP_PASSWORD:-${DB_PASSWORD}}
+      DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
       JWT_SECRET: ${JWT_SECRET:?definir JWT_SECRET en .env}
       CORS_ORIGIN: ${CORS_ORIGIN}
-    networks: [g15-app-net, g15-db-net]   # sin puertos publicados al host
+    # g15-db-net: postgres local del stack. futbolgest-net (externa): acceso
+    # opcional al dataset masivo (futbolgest-db) cuando DB_HOST=futbolgest-db.
+    networks: [g15-app-net, g15-db-net, futbolgest-net]   # sin puertos publicados al host
 
   frontend:
     image: ${FRONTEND_IMAGE:-g15-frontend:local}
@@ -52,6 +57,42 @@ services:
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:80"   # único punto de entrada; el túnel apunta acá
     networks: [g15-app-net]
+    # Live-reload del frontend: docker compose watch rebuildea la imagen
+    # automáticamente al guardar cambios en el código fuente de Angular.
+    develop:
+      watch:
+        - action: rebuild
+          path: ./proyfrontendgrupo15-main/src
+
+  # Watcher automático: rebuildea el frontend solo al detectar cambios en src/.
+  # No requiere ejecutar nada: queda corriendo como servicio del stack.
+  # Uso: docker compose up -d frontend-watcher
+  frontend-watcher:
+    image: docker:27-cli
+    container_name: g15-frontend-watcher
+    restart: unless-stopped
+    command: sh /watcher.sh
+    working_dir: /project
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/project
+      - ./scripts/watch-frontend.sh:/watcher.sh:ro
+    networks: [g15-app-net]
+
+  # Túnel público HTTPS (Cloudflare quick tunnel). Solo se levanta con:
+  #   docker compose --profile tunnel up -d tunnel
+  # Genera una URL https://*.trycloudflare.com que se imprime en los logs.
+  # Alternativa con dominio propio: túnel nombrado de Cloudflare (ver docs/acceso-internet.md).
+  tunnel:
+    image: cloudflare/cloudflared:2025.11.1
+    container_name: g15-tunnel
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --url http://frontend:80 --no-autoupdate
+    depends_on:
+      frontend:
+        condition: service_healthy
+    networks: [g15-app-net]
 
 volumes:
   g15-pgdata:
@@ -62,3 +103,6 @@ networks:
     name: g15-app-net
   g15-db-net:
     name: g15-db-net
+  futbolgest-net:
+    name: tp-futbolgest-docker_futbolgest-net
+    external: true

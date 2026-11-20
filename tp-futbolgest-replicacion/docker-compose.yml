@@ -42,6 +42,40 @@ services:
     networks:
       - replication-net
 
+  # Proxy TCP con failover: el backend de la app se conecta acá (pg-proxy:5432).
+  # Enruta al primario; si cae, pasa a la réplica (backup) automáticamente.
+  pg-proxy:
+    image: haproxy:2.9-alpine
+    container_name: futbolgest-pg-proxy
+    restart: always
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "5436:5432"   # acceso directo opcional para pruebas
+    depends_on:
+      - db-primary
+      - db-replica
+    networks:
+      - replication-net
+      - g15-app-net
+
+  # Watchdog: promueve la réplica a primario si el primario deja de responder.
+  failover-watchdog:
+    image: postgres:16-alpine
+    container_name: futbolgest-failover-watchdog
+    user: postgres
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./watchdog.sh:/watchdog.sh:ro
+    entrypoint: ["/bin/bash", "/watchdog.sh"]
+    depends_on:
+      - db-primary
+      - db-replica
+    networks:
+      - replication-net
+
 volumes:
   primary_data:
   replica_data:
@@ -49,3 +83,6 @@ volumes:
 networks:
   replication-net:
     driver: bridge
+  g15-app-net:
+    external: true
+    name: g15-app-net

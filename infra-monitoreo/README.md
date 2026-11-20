@@ -26,7 +26,7 @@ Este módulo implementa la capa de observabilidad, publicación segura hacia Int
                                  [ MantisBT (:8989) ]       [ /backups (PostgreSQL) ]     [ Nextcloud (:8081) ]
 
 ### Política de Seguridad y Exposición de Puertos
-* **Único punto de entrada público:** El frontend (`g15-frontend`) está enlazado exclusivamente a `127.0.0.1:8080` y publicado mediante **Tailscale Funnel** con certificado HTTPS automático.
+* **Único punto de entrada público:** El frontend (`g15-frontend`) está enlazado exclusivamente a `127.0.0.1:8080` y publicado mediante **Tailscale Funnel** con certificado HTTPS automático (ver §7).
 * **Interfaces administrativas protegidas:** Prometheus (`127.0.0.1:9090`), Grafana (`127.0.0.1:3001`) y n8n (`127.0.0.1:5678`) escuchan únicamente en *localhost* (o dentro de la red privada Tailnet), impidiendo el acceso directo desde Internet.
 * **Bases de datos aisladas:** Los contenedores `g15-postgres`, `futbolgest-db-primary`, `futbolgest-db-replica`, `mantis_db_hia` y `nextcloud_db` operan en redes internas de Docker sin exposición pública hacia el exterior.
 
@@ -209,22 +209,60 @@ Al iniciar Grafana (`http://localhost:3001`), la carpeta `./grafana/provisioning
 
 ---
 
-## 7. Publicación Segura en Internet con Tailscale (Actividad 9)
+## 7. Publicación Segura en Internet con Tailscale Funnel (Actividad 9)
 
-Para permitir el acceso externo durante la demostración sin abrir puertos en el router ni exponer servicios internos:
+Para permitir el acceso externo durante la demostración sin abrir puertos en el router ni exponer servicios internos, se utiliza **Tailscale Funnel**, que publica únicamente el frontend (`127.0.0.1:8080`) en Internet con HTTPS automático.
 
-1. Instalar e iniciar sesión con **Tailscale** en el servidor anfitrión:
-   ```bash
-   tailscale up
-   ```
-2. Habilitar **Tailscale Funnel** apuntando **únicamente** al puerto local del frontend (`8080`):
-   ```bash
-   tailscale funnel --bg 8080
-   ```
-3. Obtener la URL pública HTTPS asignada:
-   ```bash
-   tailscale funnel status
-   ```
-4. **Verificación desde red externa (4G/5G):**
-   * Acceder desde un dispositivo móvil fuera de la red local a `https://<nombre-nodo>.<tailnet>.ts.net` -> Carga la aplicación web con cifrado TLS.
-   * Intentar acceder desde el exterior a los puertos `:3001`, `:5678`, `:9090`, `:8989`, `:8081` o `:5432` -> Conexión rechazada, validando el aislamiento de interfaces administrativas y bases de datos.
+### Arquitectura de acceso
+
+    Internet ──HTTPS──► Tailscale Funnel (edge de Tailscale)
+                              │ túnel WireGuard cifrado
+                              ▼
+                    127.0.0.1:8080 (g15-frontend / nginx)
+                              │ /api/*
+                              ▼
+                    g15-backend (:3000, solo red interna) ──► g15-postgres (:5432, solo red interna)
+
+* **URL pública vigente:** `https://tat13.tail99c238.ts.net` (estable: se mantiene igual entre reinicios mientras el nodo `tat13` no cambie).
+* **Quién puede acceder:** cualquier persona con la URL puede cargar la aplicación, pero todas las operaciones requieren autenticación JWT propia de la app (`/api/auth`). No hay paneles administrativos expuestos.
+* **HTTPS:** lo termina Tailscale con certificado válido para `*.ts.net`; el túnel hacia el origen va cifrado con WireGuard.
+* **Servicios no expuestos:** `g15-backend` y `g15-postgres` no publican puertos en el host; Funnel solo reenvía el puerto 8080. Acceder a `https://tat13.tail99c238.ts.net:3001`, `:5432`, etc. falla (verificado).
+
+### Puesta en marcha
+
+```bash
+# 1. Levantar la aplicación
+docker compose up -d --build
+# Verificar: http://localhost:8080 abre en el navegador
+
+# 2. Conectar la PC a Tailscale (una sola vez)
+#    - Abrir Tailscale desde el menú Inicio e iniciar sesión
+#      con cuenta gratuita (Google / GitHub / Microsoft)
+
+# 3. Habilitar Funnel apuntando solo al frontend (queda en background)
+tailscale funnel --bg 8080
+# La primera vez, la consola muestra un enlace para habilitar HTTPS
+# en la consola de Tailscale: abrirlo y presionar Enable.
+
+# 4. Ver la URL pública (siempre la misma)
+tailscale funnel status
+```
+
+### Verificación desde red externa (4G/5G)
+
+* Con el celular en datos móviles (Wi-Fi apagado), abrir `https://tat13.tail99c238.ts.net` -> carga la SPA con candado HTTPS.
+* Probar `https://tat13.tail99c238.ts.net:3001` o `:5432` -> conexión rechazada, validando el aislamiento de interfaces administrativas y bases de datos.
+
+### Apagar el túnel
+
+```bash
+tailscale funnel off
+# Para la defensa, volver a habilitar con la MISMA URL:
+tailscale funnel --bg 8080
+```
+
+### Disponibilidad y registro de errores
+
+* La URL pública está registrada como target de la sonda **blackbox** de Prometheus (`disponibilidad-app` en `prometheus/prometheus.yml`), por lo que `probe_success` mide la disponibilidad del endpoint público y las alertas `AplicacionWebInaccesible` / `Alerta Servicio Caido FutbolGest` registran caídas (ver §5).
+* `tailscale funnel status` y los logs del servicio Tailscale registran el estado del túnel.
+* **Alternativa sin cuenta Tailscale:** existe un perfil `tunnel` en el `docker-compose.yml` raíz que levanta un Cloudflare Quick Tunnel (`docker compose --profile tunnel up -d tunnel`), pero genera una URL efímera `*.trycloudflare.com` en cada reinicio; Tailscale Funnel es la opción elegida por su URL estable.

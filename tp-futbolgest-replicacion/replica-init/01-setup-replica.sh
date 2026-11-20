@@ -4,7 +4,7 @@ set -e
 echo "Iniciando clonación desde el nodo principal..."
 
 # Esperar a que el primario esté listo
-until pg_isready -h db-primary -p 5432 -U replicator; do
+until pg_isready -h db-primary -p 5432 -U replicator -d postgres; do
   echo "Esperando al primario..."
   sleep 2
 done

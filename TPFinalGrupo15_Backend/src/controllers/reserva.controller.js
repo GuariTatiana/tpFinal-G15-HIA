@@ -210,7 +210,12 @@ reservaCtrl.getReservasPorComplejo = async (req, res) => {
 // Obtener todas las reservas (admin)
 reservaCtrl.getReservas = async (req, res) => {
     try {
+        const limit = Math.min(parseInt(req.query.limit, 10) || 100, 1000);
+        const offset = parseInt(req.query.offset, 10) || 0;
+
         const reservas = await Reserva.findAll({
+            limit,
+            offset,
             include: [
                 {
                     model: Cancha,

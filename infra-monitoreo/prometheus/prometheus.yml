@@ -34,6 +34,8 @@ scrape_configs:
       - targets:
           - http://g15-frontend:80
           - http://g15-backend:3000/api/complejos
+          # URL pública de Tailscale Funnel (estable mientras el nodo no cambie).
+          - https://tat13.tail99c238.ts.net
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
