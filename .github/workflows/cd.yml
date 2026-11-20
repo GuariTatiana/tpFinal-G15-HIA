@@ -1,0 +1,70 @@
+name: CD
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      rollback_tag:
+        description: "Tag (sha) a desplegar para hacer rollback manual"
+        required: false
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publicar imágenes en GHCR
+    if: ${{ !inputs.rollback_tag }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      owner: ${{ steps.meta.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: |
+          echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: TPFinalGrupo15_Backend
+          push: true
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.owner }}/g15-backend:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/g15-backend:latest
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: proyfrontendgrupo15-main
+          push: true
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.owner }}/g15-frontend:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/g15-frontend:latest
+
+  deploy:
+    name: Desplegar en servidor local (self-hosted)
+    needs: publish
+    if: ${{ always() && (needs.publish.result == 'success' || inputs.rollback_tag) }}
+    runs-on: [self-hosted, g15]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Escribir .env desde secrets (nunca desde el repo)
+        run: |
+          umask 077
+          cat > .env <<ENV
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+          APP_PORT=8080
+          ENV
+      - name: Deploy con healthcheck y rollback automático
+        run: ./deploy/deploy.sh "${{ inputs.rollback_tag || needs.publish.outputs.tag }}" "${{ needs.publish.outputs.owner || github.repository_owner }}"
