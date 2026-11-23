@@ -75,6 +75,7 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
           APP_PORT=8080
+          DB_SYNC_ALTER=false
           ENV
       - name: Deploy con healthcheck y rollback automático
         shell: bash
