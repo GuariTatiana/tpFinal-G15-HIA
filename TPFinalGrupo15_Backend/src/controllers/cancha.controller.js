@@ -43,19 +43,35 @@ canchaCtrl.crearCancha = async (req, res) => {
     }
 };
 
-// Obtener todas las canchas
+// Obtener todas las canchas (con paginación opcional)
 canchaCtrl.getCanchas = async (req, res) => {
     try {
-        console.log('GET /canchas - Obteniendo todas las canchas');
-        const canchas = await Cancha.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
+        console.log(`GET /canchas - page: ${page}, limit: ${limit}`);
+
+        const { count, rows: canchas } = await Cancha.findAndCountAll({
             include: [{
                 model: Complejo,
                 as: 'complejo',
                 attributes: ['id', 'nombre', 'direccion', 'provincia']
-            }]
+            }],
+            limit,
+            offset,
+            order: [['id', 'ASC']]
         });
-        console.log('Canchas encontradas:', canchas.length);
-        res.status(200).json(canchas);
+
+        console.log(`Canchas encontradas: ${canchas.length} de ${count} total`);
+
+        res.status(200).json({
+            canchas,
+            total: count,
+            page,
+            limit,
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (error) {
         console.error('Error al obtener canchas:', error);
         res.status(500).json({ message: 'Error al obtener canchas', error: error.message });

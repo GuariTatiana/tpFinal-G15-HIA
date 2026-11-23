@@ -94,7 +94,8 @@ services:
       - red_monitoreo
 
   n8n:
-    image: n8nio/n8n:latest
+    build: ./n8n
+    image: g15-n8n:local
     container_name: n8n
     restart: unless-stopped
     environment:
@@ -106,9 +107,15 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://n8n:5678/
+      # Credenciales pg_dump para crear backups (Flujo 4)
+      - PGHOST=futbolgest-db
+      - PGPORT=5432
+      - PGUSER=${BACKUP_DB_USER}
+      - PGPASSWORD=${BACKUP_DB_PASSWORD}
+      - PGDATABASE=${BACKUP_DB_NAME}
     volumes:
       - n8n_data:/home/node/.n8n
-      - ../tp-futbolgest-docker/backups:/backups:ro
+      - ../tp-futbolgest-docker/backups:/backups
     ports:
       - "127.0.0.1:5678:5678"
     networks:
@@ -116,6 +123,7 @@ services:
       - g15-app-net
       - mantis_net
       - nextcloud_net
+      - futbolgest-net
 
 volumes:
   prometheus_data:
@@ -136,3 +144,6 @@ networks:
     external: true
   nextcloud_net:
     external: true
+  futbolgest-net:
+    external: true
+    name: tp-futbolgest-docker_futbolgest-net

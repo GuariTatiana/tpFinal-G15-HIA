@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
-import { Cancha, CanchasComplejoResponse } from "../interface/cancha.interface";
+import { Cancha, CanchasComplejoResponse, CanchasPaginadasResponse } from "../interface/cancha.interface";
 import { environment } from "../../../environments/environment";
 
 @Injectable({
@@ -12,8 +12,10 @@ export class CanchaService {
     private http = inject(HttpClient);
     private baseApi = environment.apiUrl
 
-    getCanchas(): Observable<Cancha[]> {
-        return this.http.get<Cancha[]>(`${this.baseApi}/canchas`)
+    getCanchas(page: number = 1, limit: number = 20): Observable<CanchasPaginadasResponse> {
+        return this.http.get<CanchasPaginadasResponse>(
+            `${this.baseApi}/canchas?page=${page}&limit=${limit}`
+        )
     }
 
     getCanchasPorComplejo(complejoId: string): Observable<CanchasComplejoResponse> {

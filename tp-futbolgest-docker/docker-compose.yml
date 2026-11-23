@@ -65,6 +65,24 @@ services:
     networks:
       - futbolgest-net
 
+  backup-runner:
+    build: ./backup-runner
+    container_name: futbolgest-backup-runner
+    restart: always
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - futbolgest-net
+
 volumes:
   pgdata:
 

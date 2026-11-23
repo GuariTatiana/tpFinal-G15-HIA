@@ -69,3 +69,10 @@ export interface CanchasComplejoResponse {
     msg: string;
     canchas: Cancha[];
 }
+export interface CanchasPaginadasResponse {
+    canchas: Cancha[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}

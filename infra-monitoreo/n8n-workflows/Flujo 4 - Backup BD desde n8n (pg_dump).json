@@ -1,0 +1,231 @@
+{
+  "name": "Flujo 4 - Backup BD desde n8n (pg_dump)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 2,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Programacion Diaria 2AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 200]
+    },
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Disparador Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backup-runner:8080/backup",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Ejecutar Backup pg_dump",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json;\nconst exito = j.exito ? 1 : 0;\nreturn [{ json: { exito, archivo: j.archivo || '', tamano_bytes: j.tamano_bytes || 0, salida: j.error || JSON.stringify(j).slice(0, 500), exitCode: exito ? 0 : 1 } }];"
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Analizar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 280]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.exito }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        },
+        "combineOperation": "=all"
+      },
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Backup Exitoso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [960, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { resultado: 'EXITO', mensaje: 'Backup creado correctamente por n8n', archivo: $json.archivo, tamano_bytes: $json.tamano_bytes, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Preparar Email Exito",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 160]
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatianaguari554@gmail.com",
+        "toEmail": "tatianaguari554@gmail.com",
+        "subject": "={{ 'BACKUP CREADO OK - ' + $json.archivo }}",
+        "emailFormat": "text",
+        "text": "={{ 'BACKUP CREADO CORRECTAMENTE POR N8N\\n\\nArchivo: ' + $json.archivo + '\\nTamano: ' + $json.tamano_bytes + ' bytes\\\nTimestamp: ' + $json.timestamp + '\\n\\n(El archivo queda en /backups del servidor; es demasiado grande para adjuntarlo por email)' }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "Send Email Exito Backup",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1440, 160],
+      "credentials": {
+        "smtp": {
+          "id": "smtpGmailTatiana2026",
+          "name": "Gmail SMTP tatiana"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { resultado: 'ERROR', mensaje: 'Fallo la creacion del backup por n8n', salida: $json.salida, exitCode: $json.exitCode, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "name": "Preparar Email Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatianaguari554@gmail.com",
+        "toEmail": "tatianaguari554@gmail.com",
+        "subject": "={{ 'BACKUP ERROR - fallo pg_dump en n8n' }}",
+        "emailFormat": "text",
+        "text": "={{ 'ERROR AL CREAR BACKUP\\n\\nSalida: ' + ($json.salida || '') + '\\nExitCode: ' + $json.exitCode + '\\nTimestamp: ' + $json.timestamp }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "Send Email Error Backup",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1440, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtpGmailTatiana2026",
+          "name": "Gmail SMTP tatiana"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Programacion Diaria 2AM": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar Backup pg_dump",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparador Manual": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar Backup pg_dump",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar Backup pg_dump": {
+      "main": [
+        [
+          {
+            "node": "Analizar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Backup Exitoso?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backup Exitoso?": {
+      "main": [
+        [
+          {
+            "node": "Preparar Email Exito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Email Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Email Exito": {
+      "main": [
+        [
+          {
+            "node": "Send Email Exito Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Email Error": {
+      "main": [
+        [
+          {
+            "node": "Send Email Error Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b2c3d4e5-0001-4000-8000-000000000001",
+  "meta": {},
+  "nodeGroups": [],
+  "id": "Flujo4BackupN8n0001",
+  "tags": []
+}

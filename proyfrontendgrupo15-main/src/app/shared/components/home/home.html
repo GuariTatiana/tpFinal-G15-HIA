@@ -179,7 +179,38 @@
                 }
 
             </div>
-
+            <!-- Controles de paginación -->
+            <div class="pagination-container mt-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        Mostrando página {{ paginaActual() }} de {{ totalPaginas() }}
+                        ({{ totalCanchas() }} canchas en total)
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item" [class.disabled]="paginaActual() === 1">
+                                <button class="page-link" (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+                                    <i class="bi bi-chevron-left"></i> Anterior
+                                </button>
+                            </li>
+                            @for (pagina of [].constructor(totalPaginas()); track $index) {
+                                @if ($index + 1 >= paginaActual() - 2 && $index + 1 <= paginaActual() + 2) {
+                                    <li class="page-item" [class.active]="paginaActual() === $index + 1">
+                                        <button class="page-link" (click)="irAPagina($index + 1)">
+                                            {{ $index + 1 }}
+                                        </button>
+                                    </li>
+                                }
+                            }
+                            <li class="page-item" [class.disabled]="paginaActual() === totalPaginas()">
+                                <button class="page-link" (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginas()">
+                                    Siguiente <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </section>
 

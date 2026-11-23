@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CanchaService } from '../../services/cancha.service';
-import { Cancha } from '../../interface/cancha.interface';
+import { Cancha, CanchasPaginadasResponse } from '../../interface/cancha.interface';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services';
 
@@ -14,8 +14,10 @@ export default class Home implements OnInit {
   private canchaService = inject(CanchaService)
   authService = inject(AuthService)
   canchas = signal<Cancha[]>([]);
-
-
+  paginaActual = signal<number>(1);
+  totalPaginas = signal<number>(1);
+  totalCanchas = signal<number>(0);
+  limite = 20;
 
   nombreFiltro = signal<string>('');
   tipoFiltro = signal<string>('');
@@ -35,9 +37,11 @@ export default class Home implements OnInit {
   }
 
   obtenerCanchas() {
-    this.canchaService.getCanchas().subscribe({
-      next: (response: Cancha[]) => {
-        this.canchas.set(response)
+    this.canchaService.getCanchas(this.paginaActual(), this.limite).subscribe({
+      next: (response: CanchasPaginadasResponse) => {
+        this.canchas.set(response.canchas)
+        this.totalCanchas.set(response.total)
+        this.totalPaginas.set(response.totalPages)
       },
       error: (e) => {
         console.error('Error al obtener las canchas', e);
@@ -45,4 +49,24 @@ export default class Home implements OnInit {
     })
   }
 
+  paginaAnterior() {
+    if (this.paginaActual() > 1) {
+      this.paginaActual.update(p => p - 1);
+      this.obtenerCanchas();
+    }
+  }
+
+  paginaSiguiente() {
+    if (this.paginaActual() < this.totalPaginas()) {
+      this.paginaActual.update(p => p + 1);
+      this.obtenerCanchas();
+    }
+  }
+
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this.paginaActual.set(pagina);
+      this.obtenerCanchas();
+    }
+  }
 }
