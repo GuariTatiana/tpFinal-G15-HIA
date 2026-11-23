@@ -55,7 +55,14 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - name: Login a GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Escribir .env desde secrets (nunca desde el repo)
+        shell: bash
         run: |
           umask 077
           cat > .env <<ENV
@@ -69,4 +76,5 @@ jobs:
           APP_PORT=8080
           ENV
       - name: Deploy con healthcheck y rollback automático
+        shell: bash
         run: ./deploy/deploy.sh "${{ inputs.rollback_tag || needs.publish.outputs.tag }}" "${{ needs.publish.outputs.owner || github.repository_owner }}"
