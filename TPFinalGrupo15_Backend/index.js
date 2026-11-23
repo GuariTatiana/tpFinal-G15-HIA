@@ -2,9 +2,11 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const sequelize = require("./config/database");
 const { cargarDatosDePrueba } = require("./config/seed");
- 
+
 // Importación de rutas
 const helloRoutes = require("./src/routes/hello.routes");
 const authRoutes = require("./src/routes/auth.routes");
@@ -22,27 +24,34 @@ const Reserva = require("./src/models/reserva.model");
 const SolicitudDuenio = require("./src/models/solicitud-duenio.model");
 
 // === DEFINICION DE RELACIONES ===
-// Usuario -> Complejo (un usuario puede tener varios complejos)
 Usuario.hasMany(Complejo, { foreignKey: 'duenio_id', as: 'complejos' });
 Complejo.belongsTo(Usuario, { foreignKey: 'duenio_id', as: 'duenio' });
 
-// Usuario -> SolicitudDuenio
 Usuario.hasMany(SolicitudDuenio, { foreignKey: 'usuario_id', as: 'solicitudes_duenio' });
 SolicitudDuenio.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
-// Usuario -> Reserva (como jugador)
 Usuario.hasMany(Reserva, { foreignKey: 'jugador_id', as: 'reservas' });
 Reserva.belongsTo(Usuario, { foreignKey: 'jugador_id', as: 'jugador' });
 
-// Complejo -> Cancha
 Complejo.hasMany(Cancha, { foreignKey: 'complejo_id', as: 'canchas' });
 Cancha.belongsTo(Complejo, { foreignKey: 'complejo_id', as: 'complejo' });
 
-// Cancha -> Reserva
 Cancha.hasMany(Reserva, { foreignKey: 'cancha_id', as: 'reservas' });
 Reserva.belongsTo(Cancha, { foreignKey: 'cancha_id', as: 'cancha' });
 
 var app = express();
+
+// Seguridad HTTP y protección contra fuerza bruta
+app.disable("x-powered-by");
+app.use(helmet());
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiados intentos desde esta IP. Intente nuevamente en 15 minutos." }
+});
 
 // Middlewares
 app.use(cors({
@@ -55,12 +64,13 @@ app.use(cookieParser());
 
 // Rutas de la API
 app.use("/api", helloRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/complejos", complejoRoutes);
 app.use("/api/canchas", canchaRoutes);
 app.use("/api/reservas", reservaRoutes);
 app.use("/api/solicitudes-duenio", solicitudDuenioRoutes);
 app.use("/api/pagos", pagoRoutes);
+
 
 // Settings
 app.set("port", process.env.PORT || 3000);
