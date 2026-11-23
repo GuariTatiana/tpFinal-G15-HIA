@@ -44,7 +44,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
     # g15-db-net: postgres local del stack. futbolgest-net (externa): acceso
     # opcional al dataset masivo (futbolgest-db) cuando DB_HOST=futbolgest-db.
-    networks: [g15-app-net, g15-db-net, futbolgest-net]   # sin puertos publicados al host
+    networks: [g15-app-net, g15-db-net, futbolgest-net, replication-net]  # sin puertos publicados al host
 
   frontend:
     image: ${FRONTEND_IMAGE:-g15-frontend:local}
@@ -105,4 +105,7 @@ networks:
     name: g15-db-net
   futbolgest-net:
     name: tp-futbolgest-docker_futbolgest-net
+    external: true
+  replication-net:
+    name: tp-futbolgest-replicacion_replication-net
     external: true

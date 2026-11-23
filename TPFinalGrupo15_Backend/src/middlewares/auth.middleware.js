@@ -9,8 +9,8 @@ const verifyToken = (req, res, next) => {
 
     try {
         const token = bearerHeader.split(' ')[1];
-        const verificado = jwt.verify(token, 'PALABRA_SECRETA_TAXFEM_2026');
-        req.userId = verificado.idUsuario; 
+        const verificado = jwt.verify(token, process.env.JWT_SECRET);
+        req.userId = verificado.idUsuario;
         next();
     } catch (error) {
         return res.status(403).json({ error: 'Token inválido o expirado.' });
