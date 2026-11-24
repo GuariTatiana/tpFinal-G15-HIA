@@ -155,9 +155,7 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
-                      "datasource": {
-                        "name": "bg4cno3bo14aoe"
-                      },
+                      
                       "spec": {
                         "editorMode": "code",
                         "expr": "up{job=\"postgres-replicacion\"}",
@@ -333,9 +331,7 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
-                      "datasource": {
-                        "name": "bg4cno3bo14aoe"
-                      },
+                      
                       "spec": {
                         "editorMode": "code",
                         "expr": "max((1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100)",
@@ -931,9 +927,7 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
-                      "datasource": {
-                        "name": "bg4cno3bo14aoe"
-                      },
+                      
                       "spec": {
                         "editorMode": "code",
                         "expr": "sum by (job) (pg_stat_activity_count)",

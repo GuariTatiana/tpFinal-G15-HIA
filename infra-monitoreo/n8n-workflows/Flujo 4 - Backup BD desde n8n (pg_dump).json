@@ -38,11 +38,12 @@
       "name": "Ejecutar Backup pg_dump",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
       "position": [480, 280]
     },
     {
       "parameters": {
-        "jsCode": "const j = $json;\nconst exito = j.exito ? 1 : 0;\nreturn [{ json: { exito, archivo: j.archivo || '', tamano_bytes: j.tamano_bytes || 0, salida: j.error || JSON.stringify(j).slice(0, 500), exitCode: exito ? 0 : 1 } }];"
+        "jsCode": "const j = $json;\nif (j.exito === undefined) {\n  const err = j.error;\n  const msg = (err && (err.message || err.description || err)) || j.message || JSON.stringify(j).slice(0, 500);\n  return [{ json: { exito: 0, archivo: '', tamano_bytes: 0, salida: 'HTTP backup-runner fallo: ' + String(msg), exitCode: -1 } }];\n}\nconst exito = j.exito ? 1 : 0;\nreturn [{ json: { exito, archivo: j.archivo || '', tamano_bytes: j.tamano_bytes || 0, salida: j.error || JSON.stringify(j).slice(0, 500), exitCode: exito ? 0 : 1 } }];"
       },
       "id": "a1b2c3d4-0004-4000-8000-000000000004",
       "name": "Analizar Resultado",
@@ -71,65 +72,157 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { resultado: 'EXITO', mensaje: 'Backup creado correctamente por n8n', archivo: $json.archivo, tamano_bytes: $json.tamano_bytes, timestamp: new Date().toISOString() } }];"
+        "method": "POST",
+        "url": "http://backup-runner:8080/restore-test",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ archivo: $json.archivo }) }}",
+        "options": { "timeout": 600000 }
       },
-      "id": "a1b2c3d4-0006-4000-8000-000000000006",
-      "name": "Preparar Email Exito",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "a1b2c3d4-000d-4000-8000-00000000000d",
+      "name": "Probar Restauracion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
       "position": [1200, 160]
     },
     {
       "parameters": {
-        "fromEmail": "tatianaguari554@gmail.com",
-        "toEmail": "tatianaguari554@gmail.com",
-        "subject": "={{ 'BACKUP CREADO OK - ' + $json.archivo }}",
-        "emailFormat": "text",
-        "text": "={{ 'BACKUP CREADO CORRECTAMENTE POR N8N\\n\\nArchivo: ' + $json.archivo + '\\nTamano: ' + $json.tamano_bytes + ' bytes\\\nTimestamp: ' + $json.timestamp + '\\n\\n(El archivo queda en /backups del servidor; es demasiado grande para adjuntarlo por email)' }}",
-        "options": {}
+        "jsCode": "const j = $json;\nreturn [{ json: { ...j, es_fallo_backup: true } }];"
       },
-      "id": "a1b2c3d4-0007-4000-8000-000000000007",
-      "name": "Send Email Exito Backup",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [1440, 160],
-      "credentials": {
-        "smtp": {
-          "id": "smtpGmailTatiana2026",
-          "name": "Gmail SMTP tatiana"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { resultado: 'ERROR', mensaje: 'Fallo la creacion del backup por n8n', salida: $json.salida, exitCode: $json.exitCode, timestamp: new Date().toISOString() } }];"
-      },
-      "id": "a1b2c3d4-0008-4000-8000-000000000008",
-      "name": "Preparar Email Error",
+      "id": "a1b2c3d4-000e-4000-8000-00000000000e",
+      "name": "Sin Restore",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1200, 400]
     },
     {
       "parameters": {
+        "jsCode": "const backup = $('Analizar Resultado').first().json;\nconst cur = $input.first().json || {};\nconst esFalloBackup = !!cur.es_fallo_backup;\nconst restore = esFalloBackup ? null : cur;\nconst backupOk = backup.exito === 1;\nlet exito = 0, resumen = '', exitCode = backup.exitCode || 0;\nif (!backupOk) {\n  exito = 0;\n  resumen = 'BACKUP FALLO: ' + String(backup.salida || '').slice(0, 300);\n} else if (!restore) {\n  exito = 0; resumen = 'RESTORE no ejecutado'; exitCode = -2;\n} else {\n  const restoreOk = restore.exito === true;\n  if (restoreOk) {\n    exito = 1;\n    resumen = 'OK backup=' + (backup.archivo || '') + ' | restore OK tablas=' + restore.tablas_restauradas + ' filas=' + restore.filas_restauradas + ' origen=' + restore.tablas_origen + '/' + restore.filas_origen + ' coinciden=' + restore.coinciden;\n    exitCode = 0;\n  } else {\n    exito = 0;\n    let det = restore.error || restore.salida || '';\n    if (det && typeof det === 'object') det = det.message || JSON.stringify(det);\n    resumen = 'RESTORE FALLO: ' + String(det || JSON.stringify(restore)).slice(0, 300);\n    exitCode = -3;\n  }\n}\nreturn [{ json: { exito, archivo: backup.archivo || '', tamano_bytes: backup.tamano_bytes || 0, salida: resumen, exitCode, timestamp: new Date().toISOString(), restore: restore || null, backup_ok: backupOk ? 1 : 0 } }];"
+      },
+      "id": "a1b2c3d4-000f-4000-8000-00000000000f",
+      "name": "Evaluar Resultado Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 280]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.exito }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        },
+        "combineOperation": "=all"
+      },
+      "id": "a1b2c3d4-0010-4000-8000-000000000010",
+      "name": "Resultado Final Exitoso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1680, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json;\nconst r = j.restore || {};\nconst restoreTxt = (r && r.tablas_restauradas !== undefined)\n  ? ('Restore OK: ' + r.tablas_restauradas + ' tablas, ' + r.filas_restauradas + ' filas (origen ' + r.tablas_origen + '/' + r.filas_origen + ', coinciden=' + r.coinciden + ')')\n  : 'Restore: no aplica';\nreturn [{ json: { resultado: 'EXITO', mensaje: 'Backup + restauracion verificada OK por n8n', archivo: j.archivo, tamano_bytes: j.tamano_bytes, timestamp: j.timestamp || new Date().toISOString(), salida: j.salida, restore: restoreTxt } }];"
+      },
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Preparar Email Exito",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 160]
+    },
+    {
+      "parameters": {
         "fromEmail": "tatianaguari554@gmail.com",
         "toEmail": "tatianaguari554@gmail.com",
-        "subject": "={{ 'BACKUP ERROR - fallo pg_dump en n8n' }}",
+        "subject": "={{ 'BACKUP+RESTORE OK - ' + $json.archivo }}",
         "emailFormat": "text",
-        "text": "={{ 'ERROR AL CREAR BACKUP\\n\\nSalida: ' + ($json.salida || '') + '\\nExitCode: ' + $json.exitCode + '\\nTimestamp: ' + $json.timestamp }}",
+        "text": "={{ 'BACKUP CREADO Y RESTAURACION VERIFICADA POR N8N\\n\\nArchivo: ' + $json.archivo + '\\nTamano: ' + $json.tamano_bytes + ' bytes\\nTimestamp: ' + $json.timestamp + '\\n\\n' + ($json.salida || '') + '\\n' + ($json.restore || '') + '\\n\\n(El archivo queda en /backups del servidor; es demasiado grande para adjuntarlo por email)' }}",
         "options": {}
       },
-      "id": "a1b2c3d4-0009-4000-8000-000000000009",
-      "name": "Send Email Error Backup",
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "Send Email Exito Backup",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [1440, 400],
+      "position": [2160, 160],
       "credentials": {
         "smtp": {
           "id": "smtpGmailTatiana2026",
           "name": "Gmail SMTP tatiana"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json;\nreturn [{ json: { resultado: 'ERROR', mensaje: 'Fallo backup o restauracion por n8n', salida: j.salida, exitCode: j.exitCode, timestamp: j.timestamp || new Date().toISOString(), archivo: j.archivo || '' } }];"
+      },
+      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "name": "Preparar Email Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatianaguari554@gmail.com",
+        "toEmail": "tatianaguari554@gmail.com",
+        "subject": "={{ 'BACKUP/RESTORE ERROR - ' + ($json.archivo || 'n8n') }}",
+        "emailFormat": "text",
+        "text": "={{ 'ERROR EN BACKUP O RESTAURACION\\n\\nArchivo: ' + ($json.archivo || '') + '\\nSalida: ' + ($json.salida || '') + '\\nExitCode: ' + $json.exitCode + '\\nTimestamp: ' + $json.timestamp }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "Send Email Error Backup",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [2160, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtpGmailTatiana2026",
+          "name": "Gmail SMTP tatiana"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json;\nconst r = j.restore || {};\nconst restoreInfo = (r && r.tablas_restauradas !== undefined)\n  ? { tablas: r.tablas_restauradas, filas: r.filas_restauradas, origen_tablas: r.tablas_origen, origen_filas: r.filas_origen, coinciden: r.coinciden }\n  : null;\nconst linea = JSON.stringify({ timestamp: j.timestamp || new Date().toISOString(), resultado: j.exito > 0 ? 'EXITO' : 'ERROR', archivo: j.archivo || '', tamano_bytes: j.tamano_bytes || 0, exitCode: j.exitCode, salida: String(j.salida || '').slice(0, 300), restore: restoreInfo }) + '\\n';\nreturn [{ json: { linea } }];"
+      },
+      "id": "a1b2c3d4-000a-4000-8000-00000000000a",
+      "name": "Preparar Linea Auditoria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, 520]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "linea",
+        "options": {}
+      },
+      "id": "a1b2c3d4-000b-4000-8000-00000000000b",
+      "name": "Convertir a Texto",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [1920, 520]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/backups/auditoria-backups.log",
+        "dataPropertyName": "data",
+        "options": {
+          "append": true
+        }
+      },
+      "id": "a1b2c3d4-000c-4000-8000-00000000000c",
+      "name": "Registrar Estado en Auditoria",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [2160, 520]
     }
   ],
   "connections": {
@@ -163,6 +256,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Analizar Resultado",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -178,6 +278,69 @@
       ]
     },
     "Backup Exitoso?": {
+      "main": [
+        [
+          {
+            "node": "Probar Restauracion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin Restore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Probar Restauracion": {
+      "main": [
+        [
+          {
+            "node": "Evaluar Resultado Final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Evaluar Resultado Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sin Restore": {
+      "main": [
+        [
+          {
+            "node": "Evaluar Resultado Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar Resultado Final": {
+      "main": [
+        [
+          {
+            "node": "Resultado Final Exitoso?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar Linea Auditoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultado Final Exitoso?": {
       "main": [
         [
           {
@@ -216,6 +379,28 @@
           }
         ]
       ]
+    },
+    "Preparar Linea Auditoria": {
+      "main": [
+        [
+          {
+            "node": "Convertir a Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convertir a Texto": {
+      "main": [
+        [
+          {
+            "node": "Registrar Estado en Auditoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -223,7 +408,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "b2c3d4e5-0001-4000-8000-000000000001",
+  "versionId": "b2c3d4e5-0002-4000-8000-000000000002",
   "meta": {},
   "nodeGroups": [],
   "id": "Flujo4BackupN8n0001",
